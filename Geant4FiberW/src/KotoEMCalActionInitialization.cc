@@ -27,47 +27,45 @@
 /// \file KotoEMCalActionInitialization.cc
 /// \brief Implementation of the KotoEMCalActionInitialization class
 
+// This project class
 #include "KotoEMCalActionInitialization.hh"
+#include "KotoEMCalEventAction.hh"
 #include "KotoEMCalPrimaryGeneratorAction.hh"
 #include "KotoEMCalRunAction.hh"
-#include "KotoEMCalEventAction.hh"
 #include "KotoEMCalStackingAction.hh"
 
+// Geant4 class
 #include "Randomize.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 extern bool gSaveStepLevel;
 
 KotoEMCalActionInitialization::KotoEMCalActionInitialization(TTree* tr)
-  : G4VUserActionInitialization(), fTree(tr)
-{}
+    : G4VUserActionInitialization(), fTree(tr) {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-KotoEMCalActionInitialization::~KotoEMCalActionInitialization()
-{}
+KotoEMCalActionInitialization::~KotoEMCalActionInitialization() {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void KotoEMCalActionInitialization::BuildForMaster() const
-{
+void KotoEMCalActionInitialization::BuildForMaster() const {
   SetUserAction(new KotoEMCalRunAction());
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void KotoEMCalActionInitialization::Build() const
-{
+void KotoEMCalActionInitialization::Build() const {
   SetUserAction(new KotoEMCalPrimaryGeneratorAction);
   auto runAction = new KotoEMCalRunAction();
-  auto eventAction = new KotoEMCalEventAction(runAction,fTree);
+  auto eventAction = new KotoEMCalEventAction(runAction, fTree);
   SetUserAction(eventAction);
   SetUserAction(runAction);
-  
-  eventAction -> SetRandomSeed(CLHEP::HepRandom::getTheSeed());
-  eventAction -> SetSaveStepLevel(gSaveStepLevel);
-  eventAction -> SetBranch();
-  //SetUserAction(new KotoEMCalStackingAction());
-}  
+
+  eventAction->SetRandomSeed(CLHEP::HepRandom::getTheSeed());
+  eventAction->SetSaveStepLevel(gSaveStepLevel);
+  eventAction->SetBranch();
+  // SetUserAction(new KotoEMCalStackingAction());
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

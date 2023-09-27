@@ -30,8 +30,11 @@
 #ifndef KotoEMCalEmCalorimeterSD_h
 #define KotoEMCalEmCalorimeterSD_h 1
 
-#include "G4VSensitiveDetector.hh"
+// This project class
 #include "KotoEMCalEmCalorimeterHit.hh"
+
+// Geant4 class
+#include "G4VSensitiveDetector.hh"
 
 class G4Step;
 class G4HCofThisEvent;
@@ -39,16 +42,16 @@ class G4TouchableHistory;
 
 /// EM calorimeter sensitive detector
 using namespace std;
-class KotoEMCalEmCalorimeterSD : public G4VSensitiveDetector
-{   
-public:
+class KotoEMCalEmCalorimeterSD : public G4VSensitiveDetector {
+ public:
   KotoEMCalEmCalorimeterSD(G4String name, G4int layerNumber, G4int scintNumber);
   virtual ~KotoEMCalEmCalorimeterSD();
-  
-  virtual void Initialize(G4HCofThisEvent*HCE);
-  virtual G4bool ProcessHits(G4Step*aStep,G4TouchableHistory*ROhist);
+
+  virtual void Initialize(G4HCofThisEvent* HCE);
+  virtual G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist);
   void EndOfEvent(G4HCofThisEvent*);
-private:
+
+ private:
   G4String fNameSD;
   G4int fLayerId;
   G4int fSegmentId;
@@ -60,17 +63,17 @@ private:
   vector<G4double> fEweightedt;
 
   vector<vector<G4double>> fStepEdep;
-  
+
   vector<vector<G4double>> fPreStepx;
   vector<vector<G4double>> fPreStepy;
   vector<vector<G4double>> fPreStepz;
   vector<vector<G4double>> fPreStept;
-  
+
   vector<vector<G4double>> fPostStepx;
   vector<vector<G4double>> fPostStepy;
   vector<vector<G4double>> fPostStepz;
   vector<vector<G4double>> fPostStept;
-  
+
   vector<vector<G4double>> fParticlePx;
   vector<vector<G4double>> fParticlePy;
   vector<vector<G4double>> fParticlePz;
@@ -79,11 +82,9 @@ private:
   vector<vector<G4double>> fParticleCharge;
   vector<vector<G4double>> fParticleMass;
   vector<vector<G4int>> fParticlePDGID;
-  
+
   KotoEMCalEmCalorimeterHitsCollection* fHitsCollection;
   G4int fHCID;
-  
-  
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

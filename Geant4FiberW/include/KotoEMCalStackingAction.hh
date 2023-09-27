@@ -1,24 +1,26 @@
 #ifndef KotoEMCalStackingAction_H
 #define KotoEMCalStackingAction_H 1
 
-#include "globals.hh"
-#include "G4UserStackingAction.hh"
+// c++ std
 #include <vector>
+
+// Geant4 class
+#include "G4UserStackingAction.hh"
+#include "globals.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class KotoEMCalStackingAction : public G4UserStackingAction
-{
-public:
+class KotoEMCalStackingAction : public G4UserStackingAction {
+ public:
   KotoEMCalStackingAction();
   virtual ~KotoEMCalStackingAction();
 
-public:
+ public:
   virtual G4ClassificationOfNewTrack ClassifyNewTrack(const G4Track* aTrack);
   virtual void NewStage();
   virtual void PrepareNewEvent();
 
-private:
+ private:
   std::vector<G4int> fTrackIDvector;
   std::vector<G4int> fPDGEncodingvector;
 
@@ -27,10 +29,8 @@ private:
   G4int felectronCount;
   G4int fpositronCount;
   G4int fOtherCount;
-  
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif
-

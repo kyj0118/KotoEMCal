@@ -30,9 +30,10 @@
 #ifndef KotoEMCalPrimaryGeneratorAction_h
 #define KotoEMCalPrimaryGeneratorAction_h 1
 
+// Geant4 class
+#include "G4GeneralParticleSource.hh"
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "globals.hh"
-#include <G4GeneralParticleSource.hh>
 
 class G4ParticleGun;
 class G4GenericMessenger;
@@ -42,29 +43,25 @@ class G4ParticleDefinition;
 /// Primary generator
 ///
 /// A single particle is generated.
-/// User can select 
+/// User can select
 /// - the initial momentum and angle
 /// - the momentum and angle spreads
-/// - random selection of a particle type from proton, kaon+, pi+, muon+, e+ 
+/// - random selection of a particle type from proton, kaon+, pi+, muon+, e+
 
+class KotoEMCalPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
+ public:
+  KotoEMCalPrimaryGeneratorAction();
+  virtual ~KotoEMCalPrimaryGeneratorAction();
 
-class KotoEMCalPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
-{
-  public:
-    KotoEMCalPrimaryGeneratorAction();
-    virtual ~KotoEMCalPrimaryGeneratorAction();
-    
-    virtual void GeneratePrimaries(G4Event*);
-  
-  
-  private:
-  //void DefineCommands();
+  virtual void GeneratePrimaries(G4Event*);
+
+ private:
+  // void DefineCommands();
   G4int fUseMacFile;
   G4ParticleGun* fParticleGun;
   G4GeneralParticleSource* fGeneralParticleSource;
   G4ParticleDefinition* fParticle;
   G4double fMomentum;
-  
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

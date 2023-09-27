@@ -30,16 +30,21 @@
 #ifndef KotoEMCalEventAction_h
 #define KotoEMCalEventAction_h 1
 
-#include "G4UserEventAction.hh"
-#include "globals.hh"
-
-#include <vector>
-#include <array>
-#include "KotoEMCalRunAction.hh"
-
-#include "TTree.h"
+// Root class
 #include "TInterpreter.h"
 #include "TSystem.h"
+#include "TTree.h"
+
+// c++ std
+#include <array>
+#include <vector>
+
+// This project class
+#include "KotoEMCalRunAction.hh"
+
+// Geant4 class
+#include "G4UserEventAction.hh"
+#include "globals.hh"
 
 using namespace std;
 /// Event action
@@ -47,7 +52,7 @@ const int kMaxLayer = 120;
 const int kMaxSegment = 270;
 const int kMaxScintillator = kMaxLayer * kMaxSegment;
 
-struct EMHitStruct{
+struct EMHitStruct {
   int nhit;
   int nMaximumHits = kMaxScintillator;
   int one[kMaxScintillator];
@@ -61,7 +66,7 @@ struct EMHitStruct{
   double e[kMaxScintillator];
 };
 
-struct LeadHitStruct{
+struct LeadHitStruct {
   int nhit;
   int nMaximumHits = kMaxLayer;
   int one[kMaxLayer];
@@ -75,48 +80,47 @@ struct LeadHitStruct{
   double e[kMaxLayer];
 };
 
-struct CsIHitStruct{
+struct CsIHitStruct {
   int nhit;
   int xid[999];
   int yid[999];
   double e[999];
 };
 
-struct EventInfoStruct{
+struct EventInfoStruct {
   int eventID;
   int runID;
   long randomSeed;
 };
 
-struct PrimaryParticleInfoStruct{
-  double x,y,z;
-  double px,py,pz;
-  double p,m,e;
+struct PrimaryParticleInfoStruct {
+  double x, y, z;
+  double px, py, pz;
+  double p, m, e;
   int PDG;
 };
 
-
-class KotoEMCalEventAction : public G4UserEventAction
-{
-public:
+class KotoEMCalEventAction : public G4UserEventAction {
+ public:
   KotoEMCalEventAction(KotoEMCalRunAction *runAction, TTree *tr);
   virtual ~KotoEMCalEventAction();
   void SetBranch();
   void SetRunID(G4int RunID);
   void SetRandomSeed(long seed);
-  void SetSaveStepLevel(bool flag){fSaveStepLevel = flag;}
-  virtual void BeginOfEventAction(const G4Event*);
-  virtual void EndOfEventAction(const G4Event*);
-  
+  void SetSaveStepLevel(bool flag) { fSaveStepLevel = flag; }
+  virtual void BeginOfEventAction(const G4Event *);
+  virtual void EndOfEventAction(const G4Event *);
+
   EMHitStruct EMHit;
   LeadHitStruct LeadHit;
   CsIHitStruct CsIHit;
   EventInfoStruct EventInfo;
   PrimaryParticleInfoStruct PrimaryParticle;
-private:
-  KotoEMCalRunAction* fRunAction;  
+
+ private:
+  KotoEMCalRunAction *fRunAction;
   TTree *fTree;
-  
+
   bool fSaveStepLevel;
   vector<vector<G4double>> fEMStepEdep;
   vector<vector<G4double>> fEMPreStepx;
@@ -131,12 +135,12 @@ private:
   vector<vector<G4double>> fEMParticlePx;
   vector<vector<G4double>> fEMParticlePy;
   vector<vector<G4double>> fEMParticlePz;
-  vector<vector<G4int> > fEMParticleTrackID;
-  vector<vector<G4int> > fEMParticleParentID;
+  vector<vector<G4int>> fEMParticleTrackID;
+  vector<vector<G4int>> fEMParticleParentID;
   vector<vector<G4double>> fEMParticleCharge;
   vector<vector<G4double>> fEMParticleMass;
-  vector<vector<G4int> > fEMParticlePDGID;
-  
+  vector<vector<G4int>> fEMParticlePDGID;
+
   vector<vector<G4double>> fLeadStepEdep;
   vector<vector<G4double>> fLeadPreStepx;
   vector<vector<G4double>> fLeadPreStepy;
@@ -150,12 +154,11 @@ private:
   vector<vector<G4double>> fLeadParticlePx;
   vector<vector<G4double>> fLeadParticlePy;
   vector<vector<G4double>> fLeadParticlePz;
-  vector<vector<G4int> > fLeadParticleTrackID;
-  vector<vector<G4int> > fLeadParticleParentID;
+  vector<vector<G4int>> fLeadParticleTrackID;
+  vector<vector<G4int>> fLeadParticleParentID;
   vector<vector<G4double>> fLeadParticleCharge;
   vector<vector<G4double>> fLeadParticleMass;
-  vector<vector<G4int> > fLeadParticlePDGID;
-  
+  vector<vector<G4int>> fLeadParticlePDGID;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -30,6 +30,7 @@
 #ifndef KotoEMCalCsISD_h
 #define KotoEMCalCsISD_h 1
 
+// Geant4 class
 #include "G4VSensitiveDetector.hh"
 #include "KotoEMCalCsIHit.hh"
 
@@ -39,16 +40,16 @@ class G4TouchableHistory;
 
 /// EM calorimeter sensitive detector
 using namespace std;
-class KotoEMCalCsISD : public G4VSensitiveDetector
-{   
-public:
+class KotoEMCalCsISD : public G4VSensitiveDetector {
+ public:
   KotoEMCalCsISD(G4String name, G4int xid, G4int yid);
   virtual ~KotoEMCalCsISD();
-  
-  virtual void Initialize(G4HCofThisEvent*HCE);
-  virtual G4bool ProcessHits(G4Step*aStep,G4TouchableHistory*ROhist);
+
+  virtual void Initialize(G4HCofThisEvent* HCE);
+  virtual G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist);
   void EndOfEvent(G4HCofThisEvent*);
-private:
+
+ private:
   G4String fNameSD;
   G4int fLayerId;
   G4int fSegmentId;
@@ -57,11 +58,9 @@ private:
   G4int fyid;
 
   G4double fEdep;
-  
+
   KotoEMCalCsIHitsCollection* fHitsCollection;
   G4int fHCID;
-  
-  
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

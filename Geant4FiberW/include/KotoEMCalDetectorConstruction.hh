@@ -30,12 +30,15 @@
 #ifndef KotoEMCalDetectorConstruction_h
 #define KotoEMCalDetectorConstruction_h 1
 
-#include "globals.hh"
-#include "G4VUserDetectorConstruction.hh"
-#include "G4RotationMatrix.hh"
-#include "G4FieldManager.hh"
-
+// c++ std
 #include <vector>
+
+// Geant4 class
+#include "G4FieldManager.hh"
+#include "G4Material.hh"
+#include "G4RotationMatrix.hh"
+#include "G4VUserDetectorConstruction.hh"
+#include "globals.hh"
 
 class KotoEMCalMagneticField;
 
@@ -47,22 +50,54 @@ class G4GenericMessenger;
 
 /// Detector construction
 
-class KotoEMCalDetectorConstruction : public G4VUserDetectorConstruction
-{
-  public:
-    KotoEMCalDetectorConstruction();
-    virtual ~KotoEMCalDetectorConstruction();
-    
-    virtual G4VPhysicalVolume* Construct();
-    virtual void ConstructSDandField();
+class KotoEMCalDetectorConstruction : public G4VUserDetectorConstruction {
+ public:
+  KotoEMCalDetectorConstruction();
+  virtual ~KotoEMCalDetectorConstruction();
 
-    
-  private:
+  virtual G4VPhysicalVolume* Construct();
+  virtual void ConstructSDandField();
+
+ private:
   std::vector<G4VisAttributes*> fVisAttributes;
-  G4int NumberOfLayers;
-  G4int NumberOfLayersGrouping;
-  G4int NumberOfScintillators;
+  // Single Module configuration
+  G4int fNLayersInModule;
+  G4int fNScintSegmentXYInModule;
 
+  // Module configuration
+  G4int fNumberOfModuleX;
+  G4int fNumberOfModuleLayer;
+
+  // Absorber
+  G4double fAbsorber_size_x;
+  G4double fAbsorber_size_y;
+  G4double fAbsorber_size_z;
+
+  // Scintillating fiber
+  G4double fScintillator_size_x;
+  G4double fScintillator_size_y;
+  G4double fScintillator_size_z;
+
+  // CsI Box
+  G4double fCsI_size_x;
+  G4double fCsI_size_y;
+  G4double fCsI_size_z;
+
+  G4double fModule_size_x;
+  G4double fModule_size_y;
+  G4double fModule_size_z;
+
+  G4int fNCsIx;
+  G4int fNCsIy;
+
+  G4Material* fMaterial_Absorber;
+  G4Material* fMaterial_Scintillator;
+  G4Material* fMaterial_CsI;
+
+  G4LogicalVolume* fLogicScint;
+  G4LogicalVolume* fLogicAbsorber;
+  G4LogicalVolume* fLogicModule;
+  G4LogicalVolume* fLogicCsI;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

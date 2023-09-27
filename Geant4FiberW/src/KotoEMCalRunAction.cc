@@ -27,41 +27,40 @@
 /// \file KotoEMCalRunAction.cc
 /// \brief Implementation of the KotoEMCalRunAction class
 
-#include "KotoEMCalRunAction.hh"
-
-#include "G4Run.hh"
-#include "G4UnitsTable.hh"
-#include "G4SystemOfUnits.hh"
+// Root class
 #include "TFile.h"
 #include "TTree.h"
+
+// This project class
+#include "KotoEMCalRunAction.hh"
+
+// Geant4 class
+#include "G4Run.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4UnitsTable.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 KotoEMCalRunAction::KotoEMCalRunAction()
-  : G4UserRunAction()
-{
+    : G4UserRunAction() {
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-KotoEMCalRunAction::~KotoEMCalRunAction()
-{
+KotoEMCalRunAction::~KotoEMCalRunAction() {
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void KotoEMCalRunAction::BeginOfRunAction(const G4Run* aRun)
-{ 
+void KotoEMCalRunAction::BeginOfRunAction(const G4Run* aRun) {
   RunID = aRun->GetRunID();
   G4cout << "### Run " << RunID << " start." << G4endl;
-  auto *tr = new TTree("tree","Data Store");
+  auto* tr = new TTree("tree", "Data Store");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void KotoEMCalRunAction::EndOfRunAction(const G4Run*)
-{
-
+void KotoEMCalRunAction::EndOfRunAction(const G4Run*) {
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

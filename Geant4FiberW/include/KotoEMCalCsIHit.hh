@@ -30,11 +30,12 @@
 #ifndef KotoEMCalCsIHit_h
 #define KotoEMCalCsIHit_h 1
 
-#include "G4VHit.hh"
-#include "G4THitsCollection.hh"
+// Geant4 class
 #include "G4Allocator.hh"
-#include "G4ThreeVector.hh"
 #include "G4LogicalVolume.hh"
+#include "G4THitsCollection.hh"
+#include "G4ThreeVector.hh"
+#include "G4VHit.hh"
 
 class G4AttDef;
 class G4AttValue;
@@ -43,22 +44,21 @@ class G4AttValue;
 ///
 /// It records:
 /// - the cell ID
-/// - the energy deposit 
+/// - the energy deposit
 /// - the cell logical volume, its position and rotation
 
-class KotoEMCalCsIHit : public G4VHit
-{
-public:
+class KotoEMCalCsIHit : public G4VHit {
+ public:
   KotoEMCalCsIHit();
   KotoEMCalCsIHit(G4int cellID);
   KotoEMCalCsIHit(const KotoEMCalCsIHit &right);
   virtual ~KotoEMCalCsIHit();
-  
+
   inline void *operator new(size_t);
   inline void operator delete(void *aHit);
 
-  G4int GetDetType() const {return fDetType;} // Lead : 0, Scintillator : 1
-  
+  G4int GetDetType() const { return fDetType; }  // Lead : 0, Scintillator : 1
+
   void SetCellID(G4int z) { fCellID = z; }
   G4int GetCellID() const { return fCellID; }
 
@@ -68,25 +68,24 @@ public:
   void SetYID(G4int id) { fyid = id; }
   G4int GetYID() const { return fyid; }
 
-
   void SetLayerID(G4int z) { fLayerID = z; }
   G4int GetLayerID() const { return fLayerID; }
 
   void SetSegmentID(G4int z) { fSegmentID = z; }
   G4int GetSegmentID() const { return fSegmentID; }
-  
+
   void SetEdep(G4double de) { fEdep = de; }
   void AddEdep(G4double de) { fEdep += de; }
   G4double GetEdep() const { return fEdep; }
-  
+
   void SetPos(G4ThreeVector xyz) { fPos = xyz; }
   G4ThreeVector GetPos() const { return fPos; }
 
-  void SetStepEdep(std::vector<G4double> stepE){
+  void SetStepEdep(std::vector<G4double> stepE) {
     fStepEdep = stepE;
   }
 
-  void GetStepEdep(std::vector<G4double> &stepE){
+  void GetStepEdep(std::vector<G4double> &stepE) {
     stepE = fStepEdep;
   }
 
@@ -96,7 +95,7 @@ public:
     fPreStepz = prez;
     fPreStept = pret;
   }
-  
+
   void SetPostStepPos(std::vector<G4double> postx, std::vector<G4double> posty, std::vector<G4double> postz, std::vector<G4double> postt) {
     fPostStepx = postx;
     fPostStepy = posty;
@@ -105,8 +104,8 @@ public:
   }
 
   void SetParticleTrackInfo(std::vector<G4double> ppx, std::vector<G4double> ppy, std::vector<G4double> ppz,
-			    std::vector<G4int> trackid, std::vector<G4int> parentid,
-			    std::vector<G4double> charge, std::vector<G4double> mass, std::vector<G4int> pid){
+                            std::vector<G4int> trackid, std::vector<G4int> parentid,
+                            std::vector<G4double> charge, std::vector<G4double> mass, std::vector<G4int> pid) {
     fParticlePx = ppx;
     fParticlePy = ppy;
     fParticlePz = ppz;
@@ -117,14 +116,13 @@ public:
     fParticlePDGID = pid;
   }
 
-  
   void GetPreStepPos(std::vector<G4double> &prex, std::vector<G4double> &prey, std::vector<G4double> &prez, std::vector<G4double> &pret) {
     prex = fPreStepx;
     prey = fPreStepy;
     prez = fPreStepz;
     pret = fPreStept;
   }
-  
+
   void GetPostStepPos(std::vector<G4double> &postx, std::vector<G4double> &posty, std::vector<G4double> &postz, std::vector<G4double> &postt) {
     postx = fPostStepx;
     posty = fPostStepy;
@@ -133,8 +131,8 @@ public:
   }
 
   void GetParticleTrackInfo(std::vector<G4double> &ppx, std::vector<G4double> &ppy, std::vector<G4double> &ppz,
-			    std::vector<G4int> &trackid, std::vector<G4int> &parentid,
-			    std::vector<G4double> &charge, std::vector<G4double> &mass, std::vector<G4int> &pid){
+                            std::vector<G4int> &trackid, std::vector<G4int> &parentid,
+                            std::vector<G4double> &charge, std::vector<G4double> &mass, std::vector<G4int> &pid) {
     ppx = fParticlePx;
     ppy = fParticlePy;
     ppz = fParticlePz;
@@ -145,25 +143,29 @@ public:
     pid = fParticlePDGID;
   }
 
-  
-  void SetLogV(G4LogicalVolume* val) { fPLogV = val; }
-  const G4LogicalVolume* GetLogV() const { return fPLogV; }
+  void SetLogV(G4LogicalVolume *val) { fPLogV = val; }
+  const G4LogicalVolume *GetLogV() const { return fPLogV; }
 
-  void SetXYZTE(G4double x,G4double y,G4double z,G4double t,G4double e){
-    fPos.setX(x); fPos.setY(y); fPos.setZ(z);
+  void SetXYZTE(G4double x, G4double y, G4double z, G4double t, G4double e) {
+    fPos.setX(x);
+    fPos.setY(y);
+    fPos.setZ(z);
     fTime = t;
     fEdep = e;
   };
-  
-  void GetXYZTE(G4double &x,G4double &y,G4double &z,G4double &t,G4double &e) const {
-    x = fPos.x(); y = fPos.y(); z = fPos.z(); 
+
+  void GetXYZTE(G4double &x, G4double &y, G4double &z, G4double &t, G4double &e) const {
+    x = fPos.x();
+    y = fPos.y();
+    z = fPos.z();
     t = fTime;
     e = fEdep;
   };
-  void Print(){
-    G4cout << "(" << fPos.x() << ", " << fPos.y() << ", " <<  fPos.z() << ", " << fTime << ", " << fEdep << ")" << G4endl;
+  void Print() {
+    G4cout << "(" << fPos.x() << ", " << fPos.y() << ", " << fPos.z() << ", " << fTime << ", " << fEdep << ")" << G4endl;
   }
-private:
+
+ private:
   G4int fCellID;
   G4int fLayerID;
   G4int fSegmentID;
@@ -173,12 +175,12 @@ private:
   G4double fTime;
   G4ThreeVector fPos;
   std::vector<G4double> fStepEdep;
-  
+
   std::vector<G4double> fPreStepx;
   std::vector<G4double> fPreStepy;
   std::vector<G4double> fPreStepz;
   std::vector<G4double> fPreStept;
-  
+
   std::vector<G4double> fPostStepx;
   std::vector<G4double> fPostStepy;
   std::vector<G4double> fPostStepz;
@@ -192,27 +194,24 @@ private:
   std::vector<G4double> fParticleCharge;
   std::vector<G4double> fParticleMass;
   std::vector<G4int> fParticlePDGID;
-  
-  const G4LogicalVolume* fPLogV;
-  const G4int fDetType = 1; // Lead : 0, Scintillator : 1  
-  
+
+  const G4LogicalVolume *fPLogV;
+  const G4int fDetType = 1;  // Lead : 0, Scintillator : 1
 };
 
 using KotoEMCalCsIHitsCollection = G4THitsCollection<KotoEMCalCsIHit>;
 
-extern G4ThreadLocal G4Allocator<KotoEMCalCsIHit>* KotoEMCalCsIHitAllocator;
+extern G4ThreadLocal G4Allocator<KotoEMCalCsIHit> *KotoEMCalCsIHitAllocator;
 
-inline void* KotoEMCalCsIHit::operator new(size_t)
-{
+inline void *KotoEMCalCsIHit::operator new(size_t) {
   if (!KotoEMCalCsIHitAllocator) {
-       KotoEMCalCsIHitAllocator = new G4Allocator<KotoEMCalCsIHit>;
+    KotoEMCalCsIHitAllocator = new G4Allocator<KotoEMCalCsIHit>;
   }
-  return (void*)KotoEMCalCsIHitAllocator->MallocSingle();
+  return (void *)KotoEMCalCsIHitAllocator->MallocSingle();
 }
 
-inline void KotoEMCalCsIHit::operator delete(void* aHit)
-{
-  KotoEMCalCsIHitAllocator->FreeSingle((KotoEMCalCsIHit*) aHit);
+inline void KotoEMCalCsIHit::operator delete(void *aHit) {
+  KotoEMCalCsIHitAllocator->FreeSingle((KotoEMCalCsIHit *)aHit);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

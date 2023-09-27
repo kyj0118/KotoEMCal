@@ -30,24 +30,24 @@
 #ifndef KotoEMCalActionInitialization_h
 #define KotoEMCalActionInitialization_h 1
 
-#include "G4VUserActionInitialization.hh"
+// Root class
 #include "TTree.h"
-/// Action initialization class.
 
-class KotoEMCalActionInitialization : public G4VUserActionInitialization
-{
-public:
+// Geant4 class
+#include "G4VUserActionInitialization.hh"
+
+class KotoEMCalActionInitialization : public G4VUserActionInitialization {
+ public:
   KotoEMCalActionInitialization(TTree* tr);
   virtual ~KotoEMCalActionInitialization();
-  
+
   virtual void BuildForMaster() const;
   virtual void Build() const;
-private:
-  TTree *fTree;
+
+ private:
+  TTree* fTree;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif
-
-    

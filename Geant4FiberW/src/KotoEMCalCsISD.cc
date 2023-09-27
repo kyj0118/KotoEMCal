@@ -27,9 +27,11 @@
 /// \file KotoEMCalCsISD.cc
 /// \brief Implementation of the KotoEMCalCsISD class
 
+// This project class
 #include "KotoEMCalCsISD.hh"
 #include "KotoEMCalEmCalorimeterHit.hh"
 
+// Geant4 class
 #include "G4HCofThisEvent.hh"
 #include "G4TouchableHistory.hh"
 #include "G4Track.hh"
@@ -40,7 +42,6 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 extern bool gSaveStepLevel;
-extern int gNumberOfScintillators;
 
 KotoEMCalCsISD::KotoEMCalCsISD(G4String name, G4int xid, G4int yid)
   : G4VSensitiveDetector(name), fNameSD(name), fHitsCollection(nullptr), fHCID(-1)

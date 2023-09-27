@@ -23,13 +23,14 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// 
+//
 /// \file KotoEMCalRunAction.hh
 /// \brief Definition of the KotoEMCalRunAction class
 
 #ifndef KotoEMCalRunAction_h
 #define KotoEMCalRunAction_h 1
 
+// Geant4 class
 #include "G4UserRunAction.hh"
 #include "globals.hh"
 
@@ -39,17 +40,17 @@ class G4Run;
 
 /// Run action class
 
-class KotoEMCalRunAction : public G4UserRunAction
-{
-public:
+class KotoEMCalRunAction : public G4UserRunAction {
+ public:
   KotoEMCalRunAction();
   virtual ~KotoEMCalRunAction();
 
   virtual void BeginOfRunAction(const G4Run*);
-  virtual void   EndOfRunAction(const G4Run*);
-  G4int GetRunID() {return RunID;}
-private:
-  G4int RunID;  
+  virtual void EndOfRunAction(const G4Run*);
+  G4int GetRunID() { return RunID; }
+
+ private:
+  G4int RunID;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

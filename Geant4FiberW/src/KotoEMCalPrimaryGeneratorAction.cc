@@ -27,16 +27,20 @@
 /// \file KotoEMCalPrimaryGeneratorAction.cc
 /// \brief Implementation of the KotoEMCalPrimaryGeneratorAction class
 
+// Root class
+#include "TRandom3.h"
+
+// This project class
 #include "KotoEMCalPrimaryGeneratorAction.hh"
 
+// Geant4 class
 #include "G4Event.hh"
+#include "G4GenericMessenger.hh"
+#include "G4ParticleDefinition.hh"
 #include "G4ParticleGun.hh"
 #include "G4ParticleTable.hh"
-#include "G4ParticleDefinition.hh"
-#include "G4GenericMessenger.hh"
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
-#include "TRandom3.h"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -57,14 +61,13 @@ extern G4double gPrimaryParticlePositionXmax;
 extern G4double gPrimaryParticlePositionYmin;
 extern G4double gPrimaryParticlePositionYmax;
 
-
 extern bool gGenearteUniformMomentum;
 extern G4double gBeamMomentumMax;
-extern G4double gBeamMomentumMin; 
+extern G4double gBeamMomentumMin;
 
 extern G4double gNsteps;
 extern G4double gTheta_step;
-extern G4double gThetaLimitMin;  
+extern G4double gThetaLimitMin;
 extern G4double gThetaLimitMax;
 extern G4double gGeneratePhi;
 extern G4double gBeamMomentum;
@@ -76,103 +79,94 @@ extern G4double gFixedPhi;
 extern G4String gParticle;
 
 KotoEMCalPrimaryGeneratorAction::KotoEMCalPrimaryGeneratorAction()
-: G4VUserPrimaryGeneratorAction(),     
-  fParticleGun(nullptr),
-  fGeneralParticleSource(nullptr), 
-  fParticle(nullptr),
-  fMomentum(1000.*MeV)
-{
+    : G4VUserPrimaryGeneratorAction(),
+      fParticleGun(nullptr),
+      fGeneralParticleSource(nullptr),
+      fParticle(nullptr),
+      fMomentum(1000. * MeV) {
   fMomentum = gBeamMomentum;
-  if(gUseGPS){
-    fGeneralParticleSource  = new G4GeneralParticleSource();
-  }
-  else {
+  if (gUseGPS) {
+    fGeneralParticleSource = new G4GeneralParticleSource();
+  } else {
     auto particleTable = G4ParticleTable::GetParticleTable();
     fParticle = particleTable->FindParticle(gParticle);
-    fParticleGun  = new G4ParticleGun(fParticle);
-    if(gGenearteUniformMomentum == false){
+    fParticleGun = new G4ParticleGun(fParticle);
+    if (gGenearteUniformMomentum == false) {
       fParticleGun->SetParticleMomentum(gBeamMomentum);
     }
-
   }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-KotoEMCalPrimaryGeneratorAction::~KotoEMCalPrimaryGeneratorAction()
-{
+KotoEMCalPrimaryGeneratorAction::~KotoEMCalPrimaryGeneratorAction() {
   delete fParticleGun;
   delete fGeneralParticleSource;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void KotoEMCalPrimaryGeneratorAction::GeneratePrimaries(G4Event* event)
-{
-  if(gUseGPS){
-    fGeneralParticleSource -> GeneratePrimaryVertex(event);
-    gPrimaryParticlePosition = fGeneralParticleSource -> GetParticlePosition();
-    gPrimaryParticleEnergy = fGeneralParticleSource -> GetParticleEnergy();
-    gPrimaryParticleMomentumDirection = fGeneralParticleSource -> GetParticleMomentumDirection();
-    gPrimaryParticlePDG = fGeneralParticleSource -> GetParticleDefinition() -> GetPDGEncoding();
-    gPrimaryParticleMass = fGeneralParticleSource -> GetParticleDefinition() -> GetPDGMass();
-  }
-  else {
-    fParticleGun->SetParticleDefinition(fParticle);  
+void KotoEMCalPrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
+  if (gUseGPS) {
+    fGeneralParticleSource->GeneratePrimaryVertex(event);
+    gPrimaryParticlePosition = fGeneralParticleSource->GetParticlePosition();
+    gPrimaryParticleEnergy = fGeneralParticleSource->GetParticleEnergy();
+    gPrimaryParticleMomentumDirection = fGeneralParticleSource->GetParticleMomentumDirection();
+    gPrimaryParticlePDG = fGeneralParticleSource->GetParticleDefinition()->GetPDGEncoding();
+    gPrimaryParticleMass = fGeneralParticleSource->GetParticleDefinition()->GetPDGMass();
+  } else {
+    fParticleGun->SetParticleDefinition(fParticle);
 
     // position
-    if(gGenearteUniformPosition == false){
+    if (gGenearteUniformPosition == false) {
       fParticleGun->SetParticlePosition(gPrimaryPosition);
-    }
-    else{
-      G4double genXpos = gRandom -> Uniform(gPrimaryParticlePositionXmin,gPrimaryParticlePositionXmax);
-      G4double genYpos = gRandom -> Uniform(gPrimaryParticlePositionYmin,gPrimaryParticlePositionYmax);
-      fParticleGun->SetParticlePosition(G4ThreeVector(genXpos,genYpos,0));
+    } else {
+      G4double genXpos = gRandom->Uniform(gPrimaryParticlePositionXmin, gPrimaryParticlePositionXmax);
+      G4double genYpos = gRandom->Uniform(gPrimaryParticlePositionYmin, gPrimaryParticlePositionYmax);
+      fParticleGun->SetParticlePosition(G4ThreeVector(genXpos, genYpos, 0));
     }
 
-    //time
-    fParticleGun->SetParticleTime(0.0*ns);
+    // time
+    fParticleGun->SetParticleTime(0.0 * ns);
 
     // energy
     if (gGenearteUniformMomentum == true) {
-      G4double genMomentum = gRandom -> Uniform(gBeamMomentumMin,gBeamMomentumMax);
+      G4double genMomentum = gRandom->Uniform(gBeamMomentumMin, gBeamMomentumMax);
       fParticleGun->SetParticleMomentum(genMomentum);
     }
-    
+
     // angle
-    double dx,dy,dz;
+    double dx, dy, dz;
     G4double pi = 3.14159265358979;
-    G4double deg2rad = pi/180.0;
+    G4double deg2rad = pi / 180.0;
     // polar angle
-    if (gGenerateStepTheta == true){
-      G4double GenTheta = ( (int) (gNsteps * gRandom -> Uniform()) );
-      GenTheta = GenTheta*gTheta_step * deg2rad;
+    if (gGenerateStepTheta == true) {
+      G4double GenTheta = ((int)(gNsteps * gRandom->Uniform()));
+      GenTheta = GenTheta * gTheta_step * deg2rad;
       dz = cos(GenTheta);
-    }
-    else{
-      double theta = gRandom -> Uniform(gThetaLimitMin*deg2rad,gThetaLimitMax*deg2rad);
+    } else {
+      double theta = gRandom->Uniform(gThetaLimitMin * deg2rad, gThetaLimitMax * deg2rad);
       dz = cos(theta);
-      //dz = gRandom -> Uniform(cos(gThetaLimitMax*deg2rad),cos(gThetaLimitMin*deg2rad) ); 
+      // dz = gRandom -> Uniform(cos(gThetaLimitMax*deg2rad),cos(gThetaLimitMin*deg2rad) );
     }
-    // azimuthal angle 
+    // azimuthal angle
     double phi;
-    if (gGenerateUniformPhi){
-      phi = gRandom -> Uniform(0,2.0*pi); // uniform phi
+    if (gGenerateUniformPhi) {
+      phi = gRandom->Uniform(0, 2.0 * pi);  // uniform phi
+    } else {
+      phi = gGeneratePhi;  // defined phi
     }
-    else {
-      phi = gGeneratePhi; // defined phi
-    }
-    double sin_theta= sqrt(1.0-dz*dz);
+    double sin_theta = sqrt(1.0 - dz * dz);
     dx = sin_theta * cos(phi);
-    dy = sin_theta * sin(phi); 
-    
-    fParticleGun->SetParticleMomentumDirection(G4ThreeVector(dx,dy,dz));
-    
-    gPrimaryParticlePosition = fParticleGun -> GetParticlePosition();
-    gPrimaryParticleEnergy = fParticleGun -> GetParticleEnergy();
-    gPrimaryParticleMomentumDirection = fParticleGun -> GetParticleMomentumDirection();
-    gPrimaryParticlePDG = fParticleGun -> GetParticleDefinition() -> GetPDGEncoding();
-    gPrimaryParticleMass = fParticleGun -> GetParticleDefinition() -> GetPDGMass();
+    dy = sin_theta * sin(phi);
+
+    fParticleGun->SetParticleMomentumDirection(G4ThreeVector(dx, dy, dz));
+
+    gPrimaryParticlePosition = fParticleGun->GetParticlePosition();
+    gPrimaryParticleEnergy = fParticleGun->GetParticleEnergy();
+    gPrimaryParticleMomentumDirection = fParticleGun->GetParticleMomentumDirection();
+    gPrimaryParticlePDG = fParticleGun->GetParticleDefinition()->GetPDGEncoding();
+    gPrimaryParticleMass = fParticleGun->GetParticleDefinition()->GetPDGMass();
     fParticleGun->GeneratePrimaryVertex(event);
   }
 }
