@@ -24,70 +24,47 @@
 // ********************************************************************
 //
 //
-/// \file KotoEMCalEmCalorimeterHit.cc
-/// \brief Implementation of the KotoEMCalEmCalorimeterHit class
+
+#ifndef KotoEMCalAbsorberSD_h
+#define KotoEMCalAbsorberSD_h 1
 
 // This project class
-#include "KotoEMCalEmCalorimeterHit.hh"
+#include "KotoEMCalAbsorberHit.hh"
 
 // Geant4 class
-#include "G4AttDef.hh"
-#include "G4AttDefStore.hh"
-#include "G4AttValue.hh"
-#include "G4Colour.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4UIcommand.hh"
-#include "G4UnitsTable.hh"
-#include "G4VVisManager.hh"
-#include "G4VisAttributes.hh"
-#include "G4ios.hh"
+#include "G4VSensitiveDetector.hh"
+
+class G4Step;
+class G4HCofThisEvent;
+class G4TouchableHistory;
+
+/// EM calorimeter sensitive detector
+using namespace std;
+class KotoEMCalAbsorberSD : public G4VSensitiveDetector {
+ public:
+  KotoEMCalAbsorberSD(G4String name, G4int layerNumber, G4int scintNumber);
+  virtual ~KotoEMCalAbsorberSD();
+
+  virtual void Initialize(G4HCofThisEvent* HCE);
+  virtual G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist);
+  void EndOfEvent(G4HCofThisEvent*);
+
+ private:
+  G4String fNameSD;
+  G4int fNumberOfLayers;
+  G4int fNumberOfModulesXY;
+  G4int fNumberOfTotalModules;
+  vector<G4double> fEdep;
+  vector<G4double> fEweightedx;
+  vector<G4double> fEweightedy;
+  vector<G4double> fEweightedz;
+  vector<G4double> fEweightedt;
+
+  KotoEMCalAbsorberHitsCollection* fHitsCollection;
+  G4int fHCID;
+};
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4ThreadLocal G4Allocator<KotoEMCalEmCalorimeterHit>* KotoEMCalEmCalorimeterHitAllocator;
+#endif
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-KotoEMCalEmCalorimeterHit::KotoEMCalEmCalorimeterHit()
-    : G4VHit(),
-      fCellID(-1),
-      fLayerID(-1),
-      fSegmentID(-1),
-      fEdep(0.),
-      fPos(0.),
-      fTime(0.),
-      fPLogV(nullptr),
-      fParticlePx(0),
-      fParticlePy(0),
-      fParticlePz(0),
-      fParticleTrackID(0),
-      fParticleParentID(0),
-      fParticleCharge(0),
-      fParticleMass(0),
-      fParticlePDGID(0) {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-KotoEMCalEmCalorimeterHit::KotoEMCalEmCalorimeterHit(G4int cellID)
-    : G4VHit(),
-      fCellID(cellID),
-      fLayerID(-1),
-      fSegmentID(-1),
-      fEdep(0.),
-      fPos(0.),
-      fTime(0.),
-      fPLogV(nullptr),
-      fParticlePx(0),
-      fParticlePy(0),
-      fParticlePz(0),
-      fParticleTrackID(0),
-      fParticleParentID(0),
-      fParticleCharge(0),
-      fParticleMass(0),
-      fParticlePDGID(0) {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-KotoEMCalEmCalorimeterHit::~KotoEMCalEmCalorimeterHit() {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

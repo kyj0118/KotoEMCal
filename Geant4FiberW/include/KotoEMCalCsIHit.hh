@@ -57,7 +57,7 @@ class KotoEMCalCsIHit : public G4VHit {
   inline void *operator new(size_t);
   inline void operator delete(void *aHit);
 
-  G4int GetDetType() const { return fDetType; }  // Lead : 0, Scintillator : 1
+  G4int GetDetType() const { return fDetType; }  // Absorber : 0, Scintillator : 1
 
   void SetCellID(G4int z) { fCellID = z; }
   G4int GetCellID() const { return fCellID; }
@@ -196,7 +196,7 @@ class KotoEMCalCsIHit : public G4VHit {
   std::vector<G4int> fParticlePDGID;
 
   const G4LogicalVolume *fPLogV;
-  const G4int fDetType = 1;  // Lead : 0, Scintillator : 1
+  const G4int fDetType = 1;  // Absorber : 0, Scintillator : 1
 };
 
 using KotoEMCalCsIHitsCollection = G4THitsCollection<KotoEMCalCsIHit>;

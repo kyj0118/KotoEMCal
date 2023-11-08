@@ -56,6 +56,7 @@ void KotoEMCalRunAction::BeginOfRunAction(const G4Run* aRun) {
   RunID = aRun->GetRunID();
   G4cout << "### Run " << RunID << " start." << G4endl;
   auto* tr = new TTree("tree", "Data Store");
+  fNumberOfEventsToBeProcessed = aRun->GetNumberOfEventToBeProcessed();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

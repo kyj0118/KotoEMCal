@@ -42,7 +42,7 @@ class G4TouchableHistory;
 using namespace std;
 class KotoEMCalCsISD : public G4VSensitiveDetector {
  public:
-  KotoEMCalCsISD(G4String name, G4int xid, G4int yid);
+  KotoEMCalCsISD(G4String name, G4int nX, G4int nY);
   virtual ~KotoEMCalCsISD();
 
   virtual void Initialize(G4HCofThisEvent* HCE);
@@ -51,13 +51,15 @@ class KotoEMCalCsISD : public G4VSensitiveDetector {
 
  private:
   G4String fNameSD;
-  G4int fLayerId;
-  G4int fSegmentId;
+  G4int fNSegX;
+  G4int fNSegY;
+  G4int fNCell;
 
-  G4int fxid;
-  G4int fyid;
+  vector<G4int> fXID;
+  vector<G4int> fYID;
+  vector<G4int> fCellID;
 
-  G4double fEdep;
+  vector<G4double> fEdep;
 
   KotoEMCalCsIHitsCollection* fHitsCollection;
   G4int fHCID;

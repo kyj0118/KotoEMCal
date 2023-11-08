@@ -40,14 +40,6 @@ class G4GenericMessenger;
 class G4Event;
 class G4ParticleDefinition;
 
-/// Primary generator
-///
-/// A single particle is generated.
-/// User can select
-/// - the initial momentum and angle
-/// - the momentum and angle spreads
-/// - random selection of a particle type from proton, kaon+, pi+, muon+, e+
-
 class KotoEMCalPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
  public:
   KotoEMCalPrimaryGeneratorAction();
@@ -55,15 +47,53 @@ class KotoEMCalPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 
   virtual void GeneratePrimaries(G4Event*);
 
- private:
-  // void DefineCommands();
-  G4int fUseMacFile;
+  void SetOptionConfiguration(std::map<std::string, std::string> optConfig);
+  G4VPrimaryGenerator* GetParticleSource();
+
+  std::map<std::string, std::string> fOptionConfiguration;
+  G4String fEnergyOrMomentum;
+  G4double fEnergyMin;
+  G4double fEnergyMax;
+  G4int fEnergyNstep;
+  G4double fEnergyStepSize;
+
+  G4double fTheta;
+  G4double fThetaMin;
+  G4double fThetaMax;
+  G4int fThetaNstep;
+  G4double fThetaStepSize;
+
+  G4double fPhi;
+  G4double fPhiMin;
+  G4double fPhiMax;
+  G4int fPhiNstep;
+  G4double fPhiStepSize;
+
+  G4double fDirX;
+  G4double fDirY;
+  G4double fDirZ;
+
+  G4double fPosX;
+  G4double fPosY;
+  G4double fPosZ;
+  G4bool fPosRandomX;
+  G4bool fPosRandomY;
+  G4bool fPosRandomZ;
+  G4double fMinX;
+  G4double fMinY;
+  G4double fMinZ;
+  G4double fMaxX;
+  G4double fMaxY;
+  G4double fMaxZ;
+
+  G4String fGenerateEnergyOption;
+  G4String fGenerateAngleOption;
+  G4String fGeneratePositionOption;
+
+  G4String fParticleName;
   G4ParticleGun* fParticleGun;
   G4GeneralParticleSource* fGeneralParticleSource;
   G4ParticleDefinition* fParticle;
-  G4double fMomentum;
 };
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif

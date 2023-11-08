@@ -27,246 +27,137 @@
 /// \file exampleKotoEMCal.cc
 /// \brief Main program of the analysis/KotoEMCal example
 
-#include "globals.hh"
-#include "Randomize.hh"
-#include "time.h"
-
-// User Defined Detector
-#include "KotoEMCalDetectorConstruction.hh"
-#include "KotoEMCalPrimaryGeneratorAction.hh"
-#include "KotoEMCalDetectorConstruction.hh"
-#include "KotoEMCalActionInitialization.hh"
-
-// Geant4
-#include "G4UImanager.hh"
-#include "G4RunManager.hh"
-#include "G4VModularPhysicsList.hh"
-#include "G4UImanager.hh"
-#include "G4StepLimiterPhysics.hh"
-#include "G4VisExecutive.hh"
-#include "G4UIExecutive.hh"
-#include "G4SystemOfUnits.hh"
-
-// Physics list package
-#include "FTFP_BERT.hh"
-
-// Root
+// Root class
 #include "TFile.h"
-#include "TTree.h"
+#include "TObjString.h"
+#include "TRandom3.h"
 #include "TString.h"
 #include "TSystem.h"
-#include "TRandom3.h"
+#include "TTree.h"
+
+// This project class
+#include "KotoEMCalActionInitialization.hh"
+#include "KotoEMCalDetectorConstruction.hh"
+#include "KotoEMCalPrimaryGeneratorAction.hh"
+
+// Genat4 class
+#include "FTFP_BERT.hh"
+#include "G4RunManager.hh"
+#include "G4StepLimiterPhysics.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4UIExecutive.hh"
+#include "G4UImanager.hh"
+#include "G4VModularPhysicsList.hh"
+#include "G4VisExecutive.hh"
+#include "Randomize.hh"
+#include "globals.hh"
+
+// c++ std
+#include "time.h"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-// Global variables set by user
-bool gSaveStepLevel = false;    // 
-long gSeed = 0;                 // Random seed number. 0 for time seed 
-bool gUseGPS = true;            //
-bool gGenerateStepTheta;  //
-bool gGenerateUniformPhi = true;  //
-bool gGenearteUniformMomentum = false;
-bool gGenearteUniformPosition = false;
+using namespace std;
+map<string, string> options;
+map<string, string> parseOptions(int argc, char** argv);
 
-bool gIsGenearteFixedThetaPhi = false;
-G4double gFixedTheta;
-G4double gFixedPhi;
-
-G4double gBeamMomentumMax;
-G4double gBeamMomentumMin;
-G4double gThetaLimitMin;  
-G4double gThetaLimitMax;
-G4double gGeneratePhi;
-G4double gBeamMomentum;
-G4String gParticle;
-G4ThreeVector gPrimaryPosition;
-G4double gPrimaryParticlePositionXmin;
-G4double gPrimaryParticlePositionXmax;
-G4double gPrimaryParticlePositionYmin;
-G4double gPrimaryParticlePositionYmax;
-
-G4double gNsteps;
-G4double gTheta_step;
-
-int main(int argc,char** argv)
-{
-  //if (argc != 1 && argc != 4){
-  /*
-  if (argc != 1 && argc != 5){
-    std::cout << "./exampleKotoEMCal [1. Macro file name] [2. Output file name] [3. Random seed number] [4. Beam momentum (MeV) ]" << std::endl;
-    std::cout << "ex) ./exampleKotoEMCal run.mac example 1" << std::endl;
-    return 0;
-    }
-  */
-  if (argc != 1 && argc != 6){
-    std::cout << "./exampleKotoEMCal [1. Macro file name] [2. Output file name] [3. Random seed number] [4. Beam momentum (MeV) ]  [5. Generation mode]" << std::endl;
-    return 0;
+int main(int argc, char** argv) {
+  // Option parsing
+  options = parseOptions(argc, argv);
+  if (argc == 1) {
+    options["useGPS"] = "true";
+    options["mac"] = "vis.mac";
+    options["seed"] = "1";
+    options["notSaveTree"] = "true";
   }
-  
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //                                      User Defined Parameters                                                //
-  
-  
-  gSaveStepLevel = false;  // whether save all the step information or not
-  gUseGPS = false;  // [true] : use General Particle Source described in your.mac file (/gps/position ...)   [false] : defined at bellow
-  gGenerateStepTheta = false;
-  gPrimaryPosition = G4ThreeVector(0,0,0); // Primary particle position  
-  gPrimaryPosition = G4ThreeVector(7.0*CLHEP::mm,7.0*CLHEP::mm,0); // Primary particle position  
-  //gBeamMomentum = 1000 * CLHEP::MeV; // Primary particle momentum
-  gBeamMomentum = atof(argv[4]) * CLHEP::MeV; // Primary particle momentum
-  gParticle = "gamma"; // Particle name
-  
-  int generation_mode = atoi(argv[5]); // Primary particle momentum
 
-  // generation mode
-  // 0 : (training sample) Uniform Random theta (0 ~ 50 deg) and phi (0 ~ 2 pi) generation.
-  // 1 : (test sample) Step theta genration (0 ~ 30 deg, 5 deg step), phi(0 ~ 2 pi)
-  // 2 : uniform energy (0.1 ~ 2.0 GeV), uniform theta (0 ~ 50 deg), phi (0 ~ 2 pi)
-  // 3 : uniform xy position, uniform theta (0 ~ 50 deg), phi (0 ~ 2 pi), uniform energy (0.1 ~ 2.0 GeV)
-  // 4 ... : user defined ...
-
-  switch (generation_mode){
-  case 0:
-    gUseGPS = false;
-    gGenerateStepTheta = false;
-    gGenearteUniformMomentum = false;
-    gThetaLimitMin = 0;    // polar angle min [deg]
-    gThetaLimitMax = 50;   // polar angle max [deg]
-    //gThetaLimitMin = 15;    // polar angle min [deg]
-    //gThetaLimitMax = 65;   // polar angle max [deg]
-
-    gGenerateUniformPhi = true;
-    break;
-  case 1:
-    gUseGPS = false;
-    gGenerateStepTheta = true;
-    gGenearteUniformMomentum = false;
-    gNsteps = 9; // number of steps: Generated polar angle [0 ~ (Nstep-1)*step]
-    gTheta_step = 5; // step size of theta [deg]
-    gGenerateUniformPhi = true;
-    break;
-
-  case 2:
-    gUseGPS = false;
-    gGenearteUniformMomentum = true;
-    gBeamMomentumMax = 2.0 *CLHEP::GeV;
-    gBeamMomentumMin = 0.1 *CLHEP::GeV;
-    gGenerateStepTheta = false;
-    gThetaLimitMin = 0;    // polar angle min [deg]
-    gThetaLimitMax = 50;   // polar angle max [deg]
-    gGenerateUniformPhi = true;
-    break;
-    
-  case 3:
-    gUseGPS = false;
-    gGenearteUniformMomentum = false;
-    gGenerateStepTheta = false;
-    gThetaLimitMin = 0;    // polar angle min [deg]
-    gThetaLimitMax = 50;   // polar angle max [deg]
-    gGenerateUniformPhi = true;
-    
-    gGenearteUniformPosition = true;
-    gPrimaryParticlePositionXmin = -10.0*CLHEP::cm;
-    gPrimaryParticlePositionXmax = 10.0*CLHEP::cm;
-    gPrimaryParticlePositionYmin = -10.0*CLHEP::cm;
-    gPrimaryParticlePositionYmax = 10.0*CLHEP::cm;
-    break;
-    
-  case 4: // user defined ... 
-    gSaveStepLevel = true;  // whether save all the step information or not
-    gUseGPS = true;  // [true] : use General Particle Source described in your.mac file (/gps/position ...)   [false] : defined at bellow
-    //gParticle = "gamma"; // Particle name
-
-    //gUseGPS = false;
-    //gGenearteUniformMomentum = false;
-    //gGenerateStepTheta = false;
-    //gThetaLimitMin = 0;    // polar angle min [deg]
-    //gThetaLimitMax = 50;   // polar angle max [deg]
-    //gGenerateUniformPhi = true;
-
-    //gGenearteUniformPosition = false;
-    break;
-
-  case 5:
-    gUseGPS = false;
-    gGenerateStepTheta = false;
-    gGenearteUniformMomentum = false;
-    gThetaLimitMin = 10;    // polar angle min [deg]
-    gThetaLimitMax = 10;   // polar angle max [deg]
-    gGenerateUniformPhi = true;
-    gSaveStepLevel = false;
-    gParticle = "gamma"; // Particle name
-    break;
-    
-  default:
-    gUseGPS = true;
-    break;
+  for (auto [key, value] : options) {
+    cout << key << " : " << value << endl;
   }
-  
-  //                                      User Defined Parameters                                                //
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  if (argc == 1) gUseGPS = true; // use vis.mac
-  else {
-    //Random engine
-    CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine());
-    gSeed = (long) atol(argv[3]);
-    CLHEP::HepRandom::setTheSeed(gSeed);
-    gRandom -> SetSeed(gSeed);
-  }
-  
-  G4cout << "Save Step Level : " << gSaveStepLevel << G4endl;
-  if (gUseGPS)
-    G4cout << "Use GPS in .mac file" << G4endl;
-  
-  if (generation_mode == 0)
-    G4cout << "Training sample generation" << G4endl;
-  else
-    G4cout << "Test sample generation" << G4endl;
 
-  TString str_fname = argv[2];
-  if (!str_fname.EndsWith(".root")){
-    str_fname += ".root";
+  TString strOutFile = options["outFileName"].c_str();
+  // Random engine
+  CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine());
+  long randomSeed = atol(options["seed"].c_str());
+  CLHEP::HepRandom::setTheSeed(randomSeed);
+  gRandom->SetSeed(randomSeed);
+
+  if (strOutFile == "") strOutFile = "DefaultOutputName.root";
+  if (!strOutFile.EndsWith(".root")) {
+    strOutFile += ".root";
   }
-  else if (str_fname == ""){
-    str_fname = "VisMac.root";
-  }
-  
-  
-  TFile *tf = new TFile(str_fname,"RECREATE");
-  auto tr = new TTree("tree","Geant4 output");
-  tr -> SetAutoSave();
-  auto physicsList = new FTFP_BERT();
+
+  // if (options["visualizationOnly"] != "true") {
+  auto tf = new TFile(strOutFile, "RECREATE");
+  auto tr = new TTree("tree", "Geant4 output");
+  tr->SetAutoSave();
+  auto physicsList = new FTFP_BERT(0);
   G4RunManager* runManager = new G4RunManager;
-  runManager -> SetUserInitialization(physicsList);
-  runManager -> SetUserInitialization(new KotoEMCalActionInitialization(tr));
-  runManager -> SetUserInitialization(new KotoEMCalDetectorConstruction());
-  runManager -> SetUserAction(new KotoEMCalPrimaryGeneratorAction());
-  runManager -> Initialize();
-  
+  runManager->SetUserInitialization(physicsList);
+  runManager->SetUserInitialization(new KotoEMCalActionInitialization(tr));
+  runManager->SetUserInitialization(new KotoEMCalDetectorConstruction());
+  auto primaryGenerator = new KotoEMCalPrimaryGeneratorAction();
+  primaryGenerator->SetOptionConfiguration(options);
+  runManager->SetUserAction(primaryGenerator);
+
+  runManager->Initialize();
+
   G4VisManager* visManager = new G4VisExecutive;
-  visManager -> Initialize();
+  visManager->Initialize();
   G4UImanager* UImanager = G4UImanager::GetUIpointer();
-  
-  if (argc != 1) {
-    G4String command = "/control/execute ";
-    G4String fileName = argv[1];
-    UImanager -> ApplyCommand(command+fileName);
-  }
-  else 
-  {
-    gUseGPS = true;
+  // G4UIExecutive* ui = new G4UIExecutive(argc, argv);
+  if (options["mac"] == "vis.mac") {
     G4UIExecutive* ui = new G4UIExecutive(argc, argv);
-    UImanager -> ApplyCommand("/control/execute vis.mac"); 
-    ui -> SessionStart();
-    
-    delete ui;
+    UImanager->ApplyCommand("/control/execute vis.mac");
+    ui->SessionStart();
+  }
+  if (options["mac"] != "") {
+    G4String command = "/control/execute ";
+    command += options["mac"];
+    UImanager->ApplyCommand(command);
+  } else if (options["nEvents"] != "") {
+    G4String command = "/run/beamOn ";
+    command += options["nEvents"];
+    UImanager->ApplyCommand(command);
   }
 
-  tf -> cd();
-  tr -> Write();
-  tf -> Close();
-
-  delete visManager;
+  //  if (options["visualizationOnly"] != "true") {
+  tf->cd();
+  tr->Write();
+  tf->Close();
+  //  }
+  // delete visManager;
 
   return 0;
+}
+
+map<string, string> parseOptions(int argc, char** argv) {
+  // Option parsing
+  map<string, string> opt;
+  vector<TString> argList;
+  for (int iarg = 1; iarg < argc; iarg++) {
+    string optString = string(argv[iarg]);
+    istringstream iss(optString);
+    string token;
+    vector<string> tokens;
+    while (iss >> token)
+      tokens.push_back(token);
+    for (auto tok : tokens) argList.push_back(tok.c_str());
+  }
+
+  for (int iarg = 0; iarg < argList.size(); iarg++) {
+    if (argList[iarg].BeginsWith("-")) {
+      argList[iarg].Remove(0, 1);
+      if (argList[iarg].Contains("=")) {
+        auto substr = argList[iarg].Tokenize("=");
+        auto optionKey = ((TObjString*)substr->At(0))->GetString();
+        auto optionValue = ((TObjString*)substr->At(1))->GetString();
+        opt[optionKey.Data()] = optionValue.Data();
+      } else {
+        opt[argList[iarg].Data()] = argList[iarg + 1].Data();
+        iarg++;
+      }
+    }
+  }
+  return opt;
 }

@@ -24,46 +24,56 @@
 // ********************************************************************
 //
 //
-/// \file KotoEMCalActionInitialization.cc
-/// \brief Implementation of the KotoEMCalActionInitialization class
+/// \file KotoEMCalScintillatorHit.cc
+/// \brief Implementation of the KotoEMCalScintillatorHit class
 
 // This project class
-#include "KotoEMCalActionInitialization.hh"
-#include "KotoEMCalEventAction.hh"
-#include "KotoEMCalPrimaryGeneratorAction.hh"
-#include "KotoEMCalRunAction.hh"
-#include "KotoEMCalStackingAction.hh"
+#include "KotoEMCalScintillatorHit.hh"
 
 // Geant4 class
-#include "Randomize.hh"
+#include "G4AttDef.hh"
+#include "G4AttDefStore.hh"
+#include "G4AttValue.hh"
+#include "G4Colour.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4UIcommand.hh"
+#include "G4UnitsTable.hh"
+#include "G4VVisManager.hh"
+#include "G4VisAttributes.hh"
+#include "G4ios.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-KotoEMCalActionInitialization::KotoEMCalActionInitialization(TTree* tr)
-    : G4VUserActionInitialization(), fTree(tr) {}
+G4ThreadLocal G4Allocator<KotoEMCalScintillatorHit>* KotoEMCalScintillatorHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-KotoEMCalActionInitialization::~KotoEMCalActionInitialization() {}
+KotoEMCalScintillatorHit::KotoEMCalScintillatorHit()
+    : G4VHit(),
+      fModuleID(-1),
+      fLayerID(-1),
+      fSegmentID(-1),
+      fEdep(0.),
+      fPos(0.),
+      fTime(0.),
+      fPLogV(nullptr)
+{}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void KotoEMCalActionInitialization::BuildForMaster() const {
-  SetUserAction(new KotoEMCalRunAction());
-}
+KotoEMCalScintillatorHit::KotoEMCalScintillatorHit(G4int moduleID)
+    : G4VHit(),
+      fModuleID(moduleID),
+      fLayerID(-1),
+      fSegmentID(-1),
+      fEdep(0.),
+      fPos(0.),
+      fTime(0.),
+      fPLogV(nullptr)
+ {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void KotoEMCalActionInitialization::Build() const {
-  SetUserAction(new KotoEMCalPrimaryGeneratorAction);
-  auto runAction = new KotoEMCalRunAction();
-  auto eventAction = new KotoEMCalEventAction(runAction, fTree);
-  SetUserAction(eventAction);
-  SetUserAction(runAction);
-
-  eventAction->SetRandomSeed(CLHEP::HepRandom::getTheSeed());
-  eventAction->SetBranch();
-  // SetUserAction(new KotoEMCalStackingAction());
-}
+KotoEMCalScintillatorHit::~KotoEMCalScintillatorHit() {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

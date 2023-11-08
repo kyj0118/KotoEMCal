@@ -48,9 +48,11 @@ class KotoEMCalRunAction : public G4UserRunAction {
   virtual void BeginOfRunAction(const G4Run*);
   virtual void EndOfRunAction(const G4Run*);
   G4int GetRunID() { return RunID; }
+  G4int GetNumberOfEvents() { return fNumberOfEventsToBeProcessed;}
 
  private:
   G4int RunID;
+  G4int fNumberOfEventsToBeProcessed;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

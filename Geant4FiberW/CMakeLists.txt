@@ -2,7 +2,7 @@
 # Setup the project
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(Koto3DEMCal)
-set(CMAKE_CXX_STANDARD 17)
+#set(CMAKE_CXX_STANDARD 17)
 #----------------------------------------------------------------------------
 # Find Geant4 package, activating all available UI and Vis drivers by default
 # You can set WITH_GEANT4_UIVIS to OFF via the command line or ccmake/cmake-gui
@@ -47,14 +47,13 @@ target_link_libraries(KotoEMCal ${ROOT_LIBRARIES})
 # build KotoEMCal. This is so that we can run the executable directly because it
 # relies on these scripts being in the current working directory.
 #
-set(KotoEMCal_SCRIPTS
-  vis.mac
-  )
+file(GLOB scripts ${PROJECT_SOURCE_DIR}/macro/*)
 
-foreach(_script ${KotoEMCal_SCRIPTS})
+foreach(_script ${scripts})
+  get_filename_component(scriptNameOnly ${_script} NAME)
   configure_file(
-    ${PROJECT_SOURCE_DIR}/${_script}
-    ${PROJECT_BINARY_DIR}/${_script}
+    ${PROJECT_SOURCE_DIR}/macro/${scriptNameOnly}
+    ${PROJECT_BINARY_DIR}/${scriptNameOnly}
     COPYONLY
     )
 endforeach()

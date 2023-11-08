@@ -1,7 +1,2 @@
 # work
-
------Installation-----
-cd build
-cmake ../
-make
-
+See ../README.md

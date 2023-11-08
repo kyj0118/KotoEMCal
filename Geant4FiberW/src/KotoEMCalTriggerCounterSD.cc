@@ -24,11 +24,12 @@
 // ********************************************************************
 //
 //
-/// \file KotoEMCalCsISD.cc
-/// \brief Implementation of the KotoEMCalCsISD class
+/// \file KotoEMCalTriggerCounterSD.cc
+/// \brief Implementation of the KotoEMCalTriggerCounterSD class
 
 // This project class
-#include "KotoEMCalCsISD.hh"
+#include "KotoEMCalTriggerCounterSD.hh"
+#include "KotoEMCalTriggerCounterHit.hh"
 
 // Geant4 class
 #include "G4HCofThisEvent.hh"
@@ -40,23 +41,22 @@
 #include "Randomize.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+extern int gNumberOfTriggerCounters;
 
-KotoEMCalCsISD::KotoEMCalCsISD(G4String name, G4int nX, G4int nY)
-    : G4VSensitiveDetector(name), fNameSD(name), fHitsCollection(nullptr), fHCID(-1) {
-  fNSegX = nX;
-  fNSegY = nY;
-
-  fXID.clear();
-  fYID.clear();
-//  fCellID.clear();
+KotoEMCalTriggerCounterSD::KotoEMCalTriggerCounterSD(G4String name, G4int nLayers, G4int nModulesXY)
+    : G4VSensitiveDetector(name), fNameSD(name), fNumberOfLayers(nLayers), fNumberOfModulesXY(nModulesXY), fHitsCollection(nullptr), fHCID(-1) {
   fEdep.clear();
+  fEweightedx.clear();
+  fEweightedy.clear();
+  fEweightedz.clear();
+  fEweightedt.clear();
 
-  fNCell = fNSegX * fNSegY;
-
-  fXID.resize(fNCell, 0);
-  fYID.resize(fNCell, 0);
-//  fCellID.resize(fNCell, 0);
-  fEdep.resize(fNCell, 0);
+  fNumberOfTotalModules = fNumberOfLayers * fNumberOfModulesXY;
+  fEdep.resize(fNumberOfTotalModules, 0);
+  fEweightedx.resize(fNumberOfTotalModules, 0);
+  fEweightedy.resize(fNumberOfTotalModules, 0);
+  fEweightedz.resize(fNumberOfTotalModules, 0);
+  fEweightedt.resize(fNumberOfTotalModules, 0);
 
   G4String nameOfHC = name + "HitCollection";
   collectionName.insert(nameOfHC);
@@ -64,12 +64,12 @@ KotoEMCalCsISD::KotoEMCalCsISD(G4String name, G4int nX, G4int nY)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-KotoEMCalCsISD::~KotoEMCalCsISD() {}
+KotoEMCalTriggerCounterSD::~KotoEMCalTriggerCounterSD() {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void KotoEMCalCsISD::Initialize(G4HCofThisEvent* hce) {
-  fHitsCollection = new KotoEMCalCsIHitsCollection(fNameSD, collectionName[0]);
+void KotoEMCalTriggerCounterSD::Initialize(G4HCofThisEvent* hce) {
+  fHitsCollection = new KotoEMCalTriggerCounterHitsCollection(fNameSD, collectionName[0]);
   if (fHCID < 0) {
     fHCID = G4SDManager::GetSDMpointer()->GetCollectionID(fHitsCollection);
   }
@@ -78,31 +78,64 @@ void KotoEMCalCsISD::Initialize(G4HCofThisEvent* hce) {
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4bool KotoEMCalCsISD::ProcessHits(G4Step* step, G4TouchableHistory*) {
+G4bool KotoEMCalTriggerCounterSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
   auto edep = step->GetTotalEnergyDeposit();
+
   if (edep != 0) {
-    auto touchable = step->GetPreStepPoint()->GetTouchable();
+    auto prepoint = step->GetPreStepPoint();
+    auto postpoint = step->GetPostStepPoint();
+    auto touchable = prepoint->GetTouchable();
     G4int copyID = touchable->GetReplicaNumber();
+
+    G4double prex = (prepoint->GetPosition()).x();
+    G4double prey = (prepoint->GetPosition()).y();
+    G4double prez = (prepoint->GetPosition()).z();
+    G4double pret = prepoint->GetGlobalTime();
+
+    G4double postx = (postpoint->GetPosition()).x();
+    G4double posty = (postpoint->GetPosition()).y();
+    G4double postz = (postpoint->GetPosition()).z();
+    G4double postt = postpoint->GetGlobalTime();
+
+    G4double x = (prex + postx) / 2.0;
+    G4double y = (prey + posty) / 2.0;
+    G4double z = (prez + postz) / 2.0;
+    G4double t = (pret + postt) / 2.0;
+
     fEdep[copyID] += edep;
+    fEweightedx[copyID] += x * edep;
+    fEweightedy[copyID] += y * edep;
+    fEweightedz[copyID] += z * edep;
+    fEweightedt[copyID] += t * edep;
   }
   return true;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void KotoEMCalCsISD::EndOfEvent(G4HCofThisEvent* hce) {
-  for (int i = 0; i < fNCell; i++) {
+void KotoEMCalTriggerCounterSD::EndOfEvent(G4HCofThisEvent* hce) {
+  for (int i = 0; i < fNumberOfTotalModules; i++) {
     if (fEdep[i] == 0) continue;
-    fHitsCollection->insert(new KotoEMCalCsIHit(fHCID));
-    G4int CurrentHitID = fHitsCollection->GetSize() - 1;
 
-    auto hit = (KotoEMCalCsIHit*)((hce->GetHC(fHCID))->GetHit(CurrentHitID));
-    G4int xid = i/fNSegY;
-    G4int yid = i%fNSegY;
-    hit->SetEdep(fEdep[i]);
-    hit->SetXID(xid);
-    hit->SetYID(yid);
-    hit->SetCellID(i);
+    fEweightedx[i] /= fEdep[i];
+    fEweightedy[i] /= fEdep[i];
+    fEweightedz[i] /= fEdep[i];
+    fEweightedt[i] /= fEdep[i];
+
+    fHitsCollection->insert(new KotoEMCalTriggerCounterHit(fHCID));
+    G4int CurrentHitID = fHitsCollection->GetSize() - 1;
+    auto hit = (KotoEMCalTriggerCounterHit*)((hce->GetHC(fHCID))->GetHit(CurrentHitID));
+
+    hit->SetXYZTE(fEweightedx[i], fEweightedy[i], fEweightedz[i], fEweightedt[i], fEdep[i]);
+    G4int layerID = i / fNumberOfModulesXY;
+    G4int moduleXYID = i % fNumberOfModulesXY;
+    hit->SetLayerID(layerID);
+    hit->SetSegmentID(moduleXYID);
+
     fEdep[i] = 0.0;
+    fEweightedx[i] = 0.0;
+    fEweightedy[i] = 0.0;
+    fEweightedz[i] = 0.0;
+    fEweightedt[i] = 0.0;
   }
 }

@@ -31,10 +31,11 @@
 #include "TString.h"
 
 // This project class
+#include "KotoEMCalAbsorberSD.hh"
 #include "KotoEMCalCsISD.hh"
 #include "KotoEMCalDetectorConstruction.hh"
-#include "KotoEMCalEmCalorimeterSD.hh"
-#include "KotoEMCalLeadSD.hh"
+#include "KotoEMCalScintillatorSD.hh"
+#include "KotoEMCalTriggerCounterSD.hh"
 
 // Geant4 class
 #include "G4Box.hh"
@@ -62,7 +63,6 @@
 #include "G4tgbRotationMatrix.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-int gNumberOfScintillators;
 KotoEMCalDetectorConstruction::KotoEMCalDetectorConstruction()
     : G4VUserDetectorConstruction() {
   // Number of Modules
@@ -72,10 +72,21 @@ KotoEMCalDetectorConstruction::KotoEMCalDetectorConstruction()
   fNumberOfModuleLayer = 24;
   fNumberOfModuleX = 16;
 
+  fModuleIntervalXY = 14. * mm;
+  fModuleIntervalZ = 6. * mm;
+
+  fNLayersX0Finder = 2;
+  fNFibersX0Finder = 16;
+
+  fNTriggerCounter = 2;
+  fTrigger_size_x = 10. * cm;
+  fTrigger_size_y = 3. * cm;
+  fTrigger_size_z = 0.5 * cm;
+  fTrigger_interval_z = 5. * cm;
+
   fNCsIx = 5;
   fNCsIy = 5;
   G4int NumberOfScintillators = fNScintSegmentXYInModule * fNumberOfModuleX;  // Number of scintillator segments in a layer
-  gNumberOfScintillators = NumberOfScintillators;
 
   // Size
   fAbsorber_size_x = 25. * cm;
@@ -144,8 +155,7 @@ G4VPhysicalVolume* KotoEMCalDetectorConstruction::Construct() {
                         false);           // overlaps checking
 
   // -----------------------------------------------------
-  G4double layer_gap_z = 6.0 * mm;
-  G4double csi_offset_z = ((G4double)fNumberOfModuleLayer) * layer_gap_z + 0.5 * fCsI_size_z;
+  G4double csi_offset_z = ((G4double)fNumberOfModuleLayer) * fModuleIntervalZ + 0.5 * fCsI_size_z;
 
   std::vector<G4double> vRot;
   vRot.clear();
@@ -172,6 +182,11 @@ G4VPhysicalVolume* KotoEMCalDetectorConstruction::Construct() {
                                 0.5 * fScintillator_size_y,
                                 0.5 * fScintillator_size_z);
 
+  G4Box* solidTrigger = new G4Box("Trigger",
+                                  0.5 * fTrigger_size_x,
+                                  0.5 * fTrigger_size_y,
+                                  0.5 * fTrigger_size_z);
+
   G4Box* solidModule = new G4Box("Module",
                                  0.5 * fModule_size_x,
                                  0.5 * fModule_size_y,
@@ -183,9 +198,11 @@ G4VPhysicalVolume* KotoEMCalDetectorConstruction::Construct() {
                               0.5 * fCsI_size_z);
 
   fLogicScint = new G4LogicalVolume(solidScint, fMaterial_Scintillator, "logicScint");
-  fLogicAbsorber = new G4LogicalVolume(solidAborber, fMaterial_Absorber, "logicAbsorber");
   fLogicModule = new G4LogicalVolume(solidModule, fMaterial_Scintillator, "logicModule");
   fLogicCsI = new G4LogicalVolume(solidCsI, fMaterial_Scintillator, "logicCsI");
+  fLogicAbsorber = new G4LogicalVolume(solidAborber, fMaterial_Absorber, "logicAbsorber");
+  fLogicX0Finder = new G4LogicalVolume(solidScint, fMaterial_Scintillator, "LogicX0Finder");
+  fLogicTriggerCounter = new G4LogicalVolume(solidTrigger, fMaterial_Scintillator, "LogicTriggerCounter");
 
   // visualization attributes
   auto visAttributes_Scint = new G4VisAttributes(G4Colour(0.0, 1.0, 1.0));
@@ -214,7 +231,7 @@ G4VPhysicalVolume* KotoEMCalDetectorConstruction::Construct() {
     new G4PVPlacement(0,
                       G4ThreeVector(0, 0, zpos_Absorber),
                       fLogicAbsorber,
-                      "Scint",
+                      "Absorber",
                       fLogicModule,
                       false,
                       iLayer,  // copy No.
@@ -235,11 +252,49 @@ G4VPhysicalVolume* KotoEMCalDetectorConstruction::Construct() {
     }
   }
 
+  // Place position finding fibers
+  for (int iLayer = 0; iLayer < fNLayersX0Finder; iLayer++) {
+    G4double pos_z = fModule_size_z / 2.0 + fModuleIntervalZ * ((G4double)(iLayer - fNLayersX0Finder));
+    for (int iScint = 0; iScint < fNFibersX0Finder; iScint++) {
+      G4double pos_xy = (((G4double)iScint) - ((G4double)(fNFibersX0Finder - 1)) * 0.5) * fScintillator_size_y;
+      G4ThreeVector pos_vector;
+      auto rotMatrix = new G4RotationMatrix;
+      if (iLayer % 2 == 0) {
+        pos_vector = G4ThreeVector(0, pos_xy, pos_z);
+        rotMatrix = 0;
+      } else {
+        pos_vector = G4ThreeVector(pos_xy, 0, pos_z);
+        rotMatrix = pRot;
+      }
+      new G4PVPlacement(rotMatrix,
+                        pos_vector,
+                        fLogicX0Finder,
+                        "X0Finder",
+                        logicWorld,
+                        false,
+                        iLayer * fNFibersX0Finder + iScint,
+                        false);
+    }
+  }
+
+  // Place trigger counters
+  for (int itrig = 0; itrig < fNTriggerCounter; itrig++) {
+    G4double pos_z = ((G4double)(itrig - fNTriggerCounter)) * fTrigger_interval_z;
+    new G4PVPlacement(0,
+                      G4ThreeVector(0, 0, pos_z),
+                      fLogicX0Finder,
+                      "Trigger",
+                      logicWorld,
+                      false,
+                      itrig,
+                      false);
+  }
+
   // Place modules on the world
   for (int iLayer = 0; iLayer < fNumberOfModuleLayer; iLayer++) {
-    G4double module_pos_z = fModule_size_z / 2.0 + layer_gap_z * ((G4double)iLayer);
+    G4double module_pos_z = fModule_size_z / 2.0 + fModuleIntervalZ * ((G4double)iLayer);
     for (int imod = 0; imod < fNumberOfModuleX; imod++) {
-      G4double module_pos_xy = (((G4double)imod) - ((G4double)(fNumberOfModuleX - 1)) * 0.5) * fModule_size_y;
+      G4double module_pos_xy = (((G4double)imod) - ((G4double)(fNumberOfModuleX - 1)) * 0.5) * fModuleIntervalXY;
       G4ThreeVector pos_vector;
       auto rotMatrix = new G4RotationMatrix;
       if (iLayer % 2 == 0) {
@@ -270,7 +325,7 @@ G4VPhysicalVolume* KotoEMCalDetectorConstruction::Construct() {
                         "CsI",
                         logicWorld,
                         false,
-                        0,
+                        i * fNCsIy + j,
                         false);
     }
   }
@@ -281,17 +336,26 @@ G4VPhysicalVolume* KotoEMCalDetectorConstruction::Construct() {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void KotoEMCalDetectorConstruction::ConstructSDandField() {
   // Sensitive Detector
-  auto ScintillatorSD = new KotoEMCalEmCalorimeterSD("ScintSD", 0, 0);
+
+  auto ScintillatorSD = new KotoEMCalScintillatorSD("ScintSD", fNumberOfModuleLayer, fNumberOfModuleX);
   G4SDManager::GetSDMpointer()->AddNewDetector(ScintillatorSD);
   fLogicScint->SetSensitiveDetector(ScintillatorSD);
 
-  auto AbsorberSD = new KotoEMCalLeadSD("AbsorberSD", 0);
+  auto AbsorberSD = new KotoEMCalAbsorberSD("AbsorberSD", fNumberOfModuleLayer, fNumberOfModuleX);
   G4SDManager::GetSDMpointer()->AddNewDetector(AbsorberSD);
   fLogicAbsorber->SetSensitiveDetector(AbsorberSD);
 
-  auto CsISD = new KotoEMCalCsISD("CsISD", 0, 0);
-  G4SDManager::GetSDMpointer()->AddNewDetector(AbsorberSD);
-  fLogicCsI->SetSensitiveDetector(AbsorberSD);
+  auto CsISD = new KotoEMCalCsISD("CsISD", fNCsIx, fNCsIy);
+  G4SDManager::GetSDMpointer()->AddNewDetector(CsISD);
+  fLogicCsI->SetSensitiveDetector(CsISD);
+
+  auto X0FinderSD = new KotoEMCalTriggerCounterSD("X0FinderSD", fNLayersX0Finder, fNFibersX0Finder);
+  G4SDManager::GetSDMpointer()->AddNewDetector(X0FinderSD);
+  fLogicX0Finder->SetSensitiveDetector(X0FinderSD);
+
+  auto TriggerCounterSD = new KotoEMCalTriggerCounterSD("TriggerCounterSD", fNTriggerCounter, 1);
+  G4SDManager::GetSDMpointer()->AddNewDetector(TriggerCounterSD);
+  fLogicTriggerCounter->SetSensitiveDetector(TriggerCounterSD);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

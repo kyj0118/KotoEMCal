@@ -24,46 +24,48 @@
 // ********************************************************************
 //
 //
-/// \file KotoEMCalActionInitialization.cc
-/// \brief Implementation of the KotoEMCalActionInitialization class
+/// \file KotoEMCalScintillatorSD.hh
+/// \brief Definition of the KotoEMCalScintillatorSD class
+
+#ifndef KotoEMCalScintillatorSD_h
+#define KotoEMCalScintillatorSD_h 1
 
 // This project class
-#include "KotoEMCalActionInitialization.hh"
-#include "KotoEMCalEventAction.hh"
-#include "KotoEMCalPrimaryGeneratorAction.hh"
-#include "KotoEMCalRunAction.hh"
-#include "KotoEMCalStackingAction.hh"
+#include "KotoEMCalScintillatorHit.hh"
 
 // Geant4 class
-#include "Randomize.hh"
+#include "G4VSensitiveDetector.hh"
+
+class G4Step;
+class G4HCofThisEvent;
+class G4TouchableHistory;
+
+/// EM calorimeter sensitive detector
+using namespace std;
+class KotoEMCalScintillatorSD : public G4VSensitiveDetector {
+ public:
+  KotoEMCalScintillatorSD(G4String name, G4int layerNumber, G4int scintNumber);
+  virtual ~KotoEMCalScintillatorSD();
+
+  virtual void Initialize(G4HCofThisEvent* HCE);
+  virtual G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist);
+  void EndOfEvent(G4HCofThisEvent*);
+
+ private:
+  G4String fNameSD;
+  G4int fNumberOfLayers;
+  G4int fNumberOfModulesXY;
+  G4int fNumberOfTotalModules;
+  vector<G4double> fEdep;
+  vector<G4double> fEweightedx;
+  vector<G4double> fEweightedy;
+  vector<G4double> fEweightedz;
+  vector<G4double> fEweightedt;
+
+  KotoEMCalScintillatorHitsCollection* fHitsCollection;
+  G4int fHCID;
+};
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-KotoEMCalActionInitialization::KotoEMCalActionInitialization(TTree* tr)
-    : G4VUserActionInitialization(), fTree(tr) {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-KotoEMCalActionInitialization::~KotoEMCalActionInitialization() {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void KotoEMCalActionInitialization::BuildForMaster() const {
-  SetUserAction(new KotoEMCalRunAction());
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void KotoEMCalActionInitialization::Build() const {
-  SetUserAction(new KotoEMCalPrimaryGeneratorAction);
-  auto runAction = new KotoEMCalRunAction();
-  auto eventAction = new KotoEMCalEventAction(runAction, fTree);
-  SetUserAction(eventAction);
-  SetUserAction(runAction);
-
-  eventAction->SetRandomSeed(CLHEP::HepRandom::getTheSeed());
-  eventAction->SetBranch();
-  // SetUserAction(new KotoEMCalStackingAction());
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+#endif

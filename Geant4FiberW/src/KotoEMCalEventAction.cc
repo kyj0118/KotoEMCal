@@ -35,12 +35,13 @@
 #include "TTree.h"
 
 // This project class
+#include "KotoEMCalAbsorberHit.hh"
 #include "KotoEMCalCsIHit.hh"
-#include "KotoEMCalEmCalorimeterHit.hh"
 #include "KotoEMCalEventAction.hh"
-#include "KotoEMCalLeadHit.hh"
 #include "KotoEMCalPrimaryGeneratorAction.hh"
 #include "KotoEMCalRunAction.hh"
+#include "KotoEMCalScintillatorHit.hh"
+#include "KotoEMCalTriggerCounterHit.hh"
 
 // Geant4 class
 #include "G4Event.hh"
@@ -77,174 +78,119 @@ void KotoEMCalEventAction::BeginOfEventAction(const G4Event *) {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void KotoEMCalEventAction::EndOfEventAction(const G4Event *event) {
-  if (fSaveStepLevel) {
-    fEMStepEdep.clear();
-    fEMPreStepx.clear();
-    fEMPreStepy.clear();
-    fEMPreStepz.clear();
-    fEMPreStept.clear();
-    fEMPostStepx.clear();
-    fEMPostStepy.clear();
-    fEMPostStepz.clear();
-    fEMPostStept.clear();
-
-    fEMParticlePx.clear();
-    fEMParticlePy.clear();
-    fEMParticlePz.clear();
-    fEMParticleTrackID.clear();
-    fEMParticleParentID.clear();
-    fEMParticleCharge.clear();
-    fEMParticleMass.clear();
-    fEMParticlePDGID.clear();
-
-    fLeadStepEdep.clear();
-    fLeadPreStepx.clear();
-    fLeadPreStepy.clear();
-    fLeadPreStepz.clear();
-    fLeadPreStept.clear();
-    fLeadPostStepx.clear();
-    fLeadPostStepy.clear();
-    fLeadPostStepz.clear();
-    fLeadPostStept.clear();
-
-    fLeadParticlePx.clear();
-    fLeadParticlePy.clear();
-    fLeadParticlePz.clear();
-    fLeadParticleTrackID.clear();
-    fLeadParticleParentID.clear();
-    fLeadParticleCharge.clear();
-    fLeadParticleMass.clear();
-    fLeadParticlePDGID.clear();
-  }
   EventInfo.eventID = event->GetEventID();
-  if (EventInfo.eventID % 100 == 0) G4cout << "Event No. : " << EventInfo.eventID << G4endl;
+  if (EventInfo.eventID % 100 == 0) G4cout << "Event No. : " << EventInfo.eventID << "/" << fRunAction->GetNumberOfEvents() << G4endl;
+
+  auto runManager = G4RunManager::GetRunManager();
+  auto primaryGenerator = (KotoEMCalPrimaryGeneratorAction *)runManager->GetUserPrimaryGeneratorAction();
+  auto particleSource = primaryGenerator->GetParticleSource();
 
   auto hce = event->GetHCofThisEvent();
-  int iarrayEMHit = 0;
-  int iarrayLeadHit = 0;
+  int iarrayScintHit = 0;
+  int iarrayX0Hit = 0;
+  int iarrayTriggerHit = 0;
+  int iarrayAbsorberHit = 0;
   int iarrayCsIHit = 0;
   for (int i = 0; i < hce->GetCapacity(); i++) {
     if (hce->GetHC(i)->GetSize() == 0) continue;
     G4String iHCName = hce->GetHC(i)->GetName();
-    // EM Hit
-    if (iHCName == "EMCalHitCollection") {
-      int nEMHitsInLayer = hce->GetHC(i)->GetSize();
-      for (int ih = 0; ih < nEMHitsInLayer; ih++) {
-        auto hit = (KotoEMCalEmCalorimeterHit *)(hce->GetHC(i)->GetHit(ih));
-        EMHit.cid[iarrayEMHit] = hit->GetCellID();
-        EMHit.lid[iarrayEMHit] = hit->GetLayerID();
-        EMHit.segid[iarrayEMHit] = hit->GetSegmentID();
+
+    // Scintillator Hit
+    if (iHCName == "ScintSDHitCollection") {
+      int nScintHits = hce->GetHC(i)->GetSize();
+      for (int ih = 0; ih < nScintHits; ih++) {
+        auto hit = (KotoEMCalScintillatorHit *)(hce->GetHC(i)->GetHit(ih));
+        ScintHit.cid[iarrayScintHit] = hit->GetModuleID();
+        ScintHit.lid[iarrayScintHit] = hit->GetLayerID();
+        ScintHit.segid[iarrayScintHit] = hit->GetSegmentID();
         double xx, yy, zz, tt, ee;
         hit->GetXYZTE(xx, yy, zz, tt, ee);
 
-        EMHit.one[iarrayEMHit] = 1;
-        EMHit.x[iarrayEMHit] = xx;
-        EMHit.y[iarrayEMHit] = yy;
-        EMHit.z[iarrayEMHit] = zz;
-        EMHit.t[iarrayEMHit] = tt;
-        EMHit.e[iarrayEMHit] = ee;
-        if (fSaveStepLevel) {
-          vector<double> prex, prey, prez, pret;
-          vector<double> postx, posty, postz, postt;
-          vector<double> stepE;
-          vector<double> ppx, ppy, ppz;
-          vector<int> trackid, parentid;
-          vector<double> charge, mass;
-          vector<int> pid;
-          hit->GetPreStepPos(prex, prey, prez, pret);
-          hit->GetPostStepPos(postx, posty, postz, postt);
-          hit->GetStepEdep(stepE);
-          hit->GetParticleTrackInfo(ppx, ppy, ppz, trackid, parentid, charge, mass, pid);
-
-          fEMStepEdep.push_back(stepE);
-          fEMPreStepx.push_back(prex);
-          fEMPreStepy.push_back(prey);
-          fEMPreStepz.push_back(prez);
-          fEMPreStept.push_back(pret);
-          fEMPostStepx.push_back(postx);
-          fEMPostStepy.push_back(posty);
-          fEMPostStepz.push_back(postz);
-          fEMPostStept.push_back(postt);
-          /*
-            fEMParticlePx.push_back(ppx);
-            fEMParticlePy.push_back(ppy);
-            fEMParticlePz.push_back(ppz);
-            fEMParticleTrackID.push_back(trackid);
-            fEMParticleParentID.push_back(parentid);
-            fEMParticleCharge.push_back(charge);
-            fEMParticleMass.push_back(mass);
-            fEMParticlePDGID.push_back(pid);
-          */
-        }
-        iarrayEMHit++;
+        ScintHit.x[iarrayScintHit] = xx;
+        ScintHit.y[iarrayScintHit] = yy;
+        ScintHit.z[iarrayScintHit] = zz;
+        ScintHit.t[iarrayScintHit] = tt;
+        ScintHit.e[iarrayScintHit] = ee;
+        iarrayScintHit++;
       }
     }
 
-    // Lead Hit
-    else if (iHCName == "LeadHitCollection") {
-      auto hit = (KotoEMCalLeadHit *)(hce->GetHC(i)->GetHit(0));
-      LeadHit.cid[iarrayLeadHit] = hit->GetCellID();
-      LeadHit.lid[iarrayLeadHit] = hit->GetLayerID();
-      double xx, yy, zz, tt, ee;
-      hit->GetXYZTE(xx, yy, zz, tt, ee);
-      LeadHit.one[iarrayLeadHit] = 1;
-      LeadHit.x[iarrayLeadHit] = xx;
-      LeadHit.y[iarrayLeadHit] = yy;
-      LeadHit.z[iarrayLeadHit] = zz;
-      LeadHit.t[iarrayLeadHit] = tt;
-      LeadHit.e[iarrayLeadHit] = ee;
+    // X0Finder Hit
+    else if (iHCName == "X0FinderSDHitCollection") {
+      int nX0Hits = hce->GetHC(i)->GetSize();
+      for (int ih = 0; ih < nX0Hits; ih++) {
+        auto hit = (KotoEMCalTriggerCounterHit *)(hce->GetHC(i)->GetHit(ih));
+        X0FinderHit.cid[iarrayX0Hit] = hit->GetModuleID();
+        X0FinderHit.lid[iarrayX0Hit] = hit->GetLayerID();
+        X0FinderHit.segid[iarrayX0Hit] = hit->GetSegmentID();
+        double xx, yy, zz, tt, ee;
+        hit->GetXYZTE(xx, yy, zz, tt, ee);
 
-      if (fSaveStepLevel) {
-        vector<double> prex, prey, prez, pret;
-        vector<double> postx, posty, postz, postt;
-        vector<double> stepE;
-        vector<double> ppx, ppy, ppz;
-        vector<int> trackid, parentid;
-        vector<double> charge, mass;
-        vector<int> pid;
-
-        hit->GetPreStepPos(prex, prey, prez, pret);
-        hit->GetPostStepPos(postx, posty, postz, postt);
-        hit->GetStepEdep(stepE);
-        hit->GetParticleTrackInfo(ppx, ppy, ppz, trackid, parentid, charge, mass, pid);
-
-        fLeadStepEdep.push_back(stepE);
-        fLeadPreStepx.push_back(prex);
-        fLeadPreStepy.push_back(prey);
-        fLeadPreStepz.push_back(prez);
-        fLeadPreStept.push_back(pret);
-        fLeadPostStepx.push_back(postx);
-        fLeadPostStepy.push_back(posty);
-        fLeadPostStepz.push_back(postz);
-        fLeadPostStept.push_back(postt);
-        /*
-          fLeadParticlePx.push_back(ppx);
-          fLeadParticlePy.push_back(ppy);
-          fLeadParticlePz.push_back(ppz);
-          fLeadParticleTrackID.push_back(trackid);
-          fLeadParticleParentID.push_back(parentid);
-          fLeadParticleCharge.push_back(charge);
-          fLeadParticleMass.push_back(mass);
-          fLeadParticlePDGID.push_back(pid);
-        */
+        X0FinderHit.x[iarrayX0Hit] = xx;
+        X0FinderHit.y[iarrayX0Hit] = yy;
+        X0FinderHit.z[iarrayX0Hit] = zz;
+        X0FinderHit.t[iarrayX0Hit] = tt;
+        X0FinderHit.e[iarrayX0Hit] = ee;
+        iarrayX0Hit++;
       }
-      iarrayLeadHit++;
+    }
+
+    // X0Finder Hit
+    else if (iHCName == "TriggerCounterSDHitCollection") {
+      int nTriggerHits = hce->GetHC(i)->GetSize();
+      for (int ih = 0; ih < nTriggerHits; ih++) {
+        auto hit = (KotoEMCalTriggerCounterHit *)(hce->GetHC(i)->GetHit(ih));
+        TriggerCounterHit.cid[iarrayTriggerHit] = hit->GetModuleID();
+        TriggerCounterHit.lid[iarrayTriggerHit] = hit->GetLayerID();
+        TriggerCounterHit.segid[iarrayTriggerHit] = hit->GetSegmentID();
+        double xx, yy, zz, tt, ee;
+        hit->GetXYZTE(xx, yy, zz, tt, ee);
+
+        TriggerCounterHit.x[iarrayTriggerHit] = xx;
+        TriggerCounterHit.y[iarrayTriggerHit] = yy;
+        TriggerCounterHit.z[iarrayTriggerHit] = zz;
+        TriggerCounterHit.t[iarrayTriggerHit] = tt;
+        TriggerCounterHit.e[iarrayTriggerHit] = ee;
+        iarrayTriggerHit++;
+      }
+    }
+
+    // Absorber Hit
+    else if (iHCName == "AbsorberSDHitCollection") {
+      int nAbsorberHits = hce->GetHC(i)->GetSize();
+      for (int ih = 0; ih < nAbsorberHits; ih++) {
+        auto hit = (KotoEMCalAbsorberHit *)(hce->GetHC(i)->GetHit(ih));
+        AbsorberHit.cid[iarrayAbsorberHit] = hit->GetModuleID();
+        AbsorberHit.lid[iarrayAbsorberHit] = hit->GetLayerID();
+        AbsorberHit.segid[iarrayAbsorberHit] = hit->GetSegmentID();
+        double xx, yy, zz, tt, ee;
+        hit->GetXYZTE(xx, yy, zz, tt, ee);
+        
+        AbsorberHit.x[iarrayAbsorberHit] = xx;
+        AbsorberHit.y[iarrayAbsorberHit] = yy;
+        AbsorberHit.z[iarrayAbsorberHit] = zz;
+        AbsorberHit.t[iarrayAbsorberHit] = tt;
+        AbsorberHit.e[iarrayAbsorberHit] = ee;
+        iarrayAbsorberHit++;
+      }
     }
 
     // CsI Hit
-
-    else if (iHCName == "CsIHitCollection") {
+    else if (iHCName == "CsISDHitCollection") {
       auto hit = (KotoEMCalCsIHit *)(hce->GetHC(i)->GetHit(0));
       CsIHit.e[iarrayCsIHit] = hit->GetEdep();
       CsIHit.xid[iarrayCsIHit] = hit->GetXID();
       CsIHit.yid[iarrayCsIHit] = hit->GetYID();
+      CsIHit.cid[iarrayCsIHit] = hit->GetCellID();
       iarrayCsIHit++;
     }
   }
 
-  EMHit.nhit = iarrayEMHit;
-  LeadHit.nhit = iarrayLeadHit;
+  ScintHit.nhit = iarrayScintHit;
+  AbsorberHit.nhit = iarrayAbsorberHit;
   CsIHit.nhit = iarrayCsIHit;
+  X0FinderHit.nhit = iarrayX0Hit;
+  TriggerCounterHit.nhit = iarrayTriggerHit;
 
   PrimaryParticle.x = gPrimaryParticlePosition.getX();
   PrimaryParticle.y = gPrimaryParticlePosition.getY();
@@ -263,11 +209,6 @@ void KotoEMCalEventAction::EndOfEventAction(const G4Event *event) {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void KotoEMCalEventAction::SetBranch() {
-  if (fSaveStepLevel) {
-    gInterpreter->GenerateDictionary("vector<vector<int> >", "vector");
-    gInterpreter->GenerateDictionary("vector<vector<double> >", "vector");
-    // gSystem -> Exec("rm -f AutoDict_vector_vector_*___*");
-  }
   fTree->Branch("eventID", &EventInfo.eventID, "eventID/I");
   fTree->Branch("runID", &EventInfo.runID, "runID/I");
   fTree->Branch("randomSeed", &EventInfo.randomSeed, "randomSeed/L");
@@ -275,7 +216,6 @@ void KotoEMCalEventAction::SetBranch() {
   fTree->Branch("PrimaryParticle.x", &PrimaryParticle.x, "PrimaryParticle.x/D");
   fTree->Branch("PrimaryParticle.y", &PrimaryParticle.y, "PrimaryParticle.y/D");
   fTree->Branch("PrimaryParticle.z", &PrimaryParticle.z, "PrimaryParticle.z/D");
-
   fTree->Branch("PrimaryParticle.px", &PrimaryParticle.px, "PrimaryParticle.px/D");
   fTree->Branch("PrimaryParticle.py", &PrimaryParticle.py, "PrimaryParticle.py/D");
   fTree->Branch("PrimaryParticle.pz", &PrimaryParticle.pz, "PrimaryParticle.pz/D");
@@ -284,72 +224,51 @@ void KotoEMCalEventAction::SetBranch() {
   fTree->Branch("PrimaryParticle.e", &PrimaryParticle.e, "PrimaryParticle.e/D");
   fTree->Branch("PrimaryParticle.PDG", &PrimaryParticle.PDG, "PrimaryParticle.PDG/I");
 
-  fTree->Branch("nEMHit", &EMHit.nhit, "nEMHit/I");
-  fTree->Branch("EMHit.one", EMHit.one, "EMHit.one[nEMHit]/I");
-  fTree->Branch("EMHit.CellID", EMHit.cid, "EMHit.CellID[nEMHit]/I");
-  fTree->Branch("EMHit.LayerID", EMHit.lid, "EMHit.LayerID[nEMHit]/I");
-  fTree->Branch("EMHit.SegmentID", EMHit.segid, "EMHit.SegmentID[nEMHit]/I");
-  fTree->Branch("EMHit.x", EMHit.x, "EMHit.x[nEMHit]/D");
-  fTree->Branch("EMHit.y", EMHit.y, "EMHit.y[nEMHit]/D");
-  fTree->Branch("EMHit.z", EMHit.z, "EMHit.z[nEMHit]/D");
-  fTree->Branch("EMHit.t", EMHit.t, "EMHit.t[nEMHit]/D");
-  fTree->Branch("EMHit.e", EMHit.e, "EMHit.e[nEMHit]/D");
+  fTree->Branch("nScintHit", &ScintHit.nhit, "nScintHit/I");
+  fTree->Branch("ScintHit.ModuleID", ScintHit.cid, "ScintHit.ModuleID[nScintHit]/I");
+  fTree->Branch("ScintHit.LayerID", ScintHit.lid, "ScintHit.LayerID[nScintHit]/I");
+  fTree->Branch("ScintHit.SegmentID", ScintHit.segid, "ScintHit.SegmentID[nScintHit]/I");
+  fTree->Branch("ScintHit.x", ScintHit.x, "ScintHit.x[nScintHit]/D");
+  fTree->Branch("ScintHit.y", ScintHit.y, "ScintHit.y[nScintHit]/D");
+  fTree->Branch("ScintHit.z", ScintHit.z, "ScintHit.z[nScintHit]/D");
+  fTree->Branch("ScintHit.t", ScintHit.t, "ScintHit.t[nScintHit]/D");
+  fTree->Branch("ScintHit.e", ScintHit.e, "ScintHit.e[nScintHit]/D");
 
-  fTree->Branch("nLeadHit", &LeadHit.nhit, "nLeadHit/I");
-  fTree->Branch("LeadHit.one", LeadHit.one, "LeadHit.one[nLeadHit]/I");
-  fTree->Branch("LeadHit.CellID", LeadHit.cid, "LeadHit.CellID[nLeadHit]/I");
-  fTree->Branch("LeadHit.LayerID", LeadHit.lid, "LeadHit.LayerID[nLeadHit]/I");
-  fTree->Branch("LeadHit.x", LeadHit.x, "LeadHit.x[nLeadHit]/D");
-  fTree->Branch("LeadHit.y", LeadHit.y, "LeadHit.y[nLeadHit]/D");
-  fTree->Branch("LeadHit.z", LeadHit.z, "LeadHit.z[nLeadHit]/D");
-  fTree->Branch("LeadHit.t", LeadHit.t, "LeadHit.t[nLeadHit]/D");
-  fTree->Branch("LeadHit.e", LeadHit.e, "LeadHit.e[nLeadHit]/D");
+  fTree->Branch("nX0FinderHit", &X0FinderHit.nhit, "nX0FinderHit/I");
+  fTree->Branch("X0FinderHit.ModuleID", X0FinderHit.cid, "X0FinderHit.ModuleID[nX0FinderHit]/I");
+  fTree->Branch("X0FinderHit.LayerID", X0FinderHit.lid, "X0FinderHit.LayerID[nX0FinderHit]/I");
+  fTree->Branch("X0FinderHit.SegmentID", X0FinderHit.segid, "X0FinderHit.SegmentID[nX0FinderHit]/I");
+  fTree->Branch("X0FinderHit.x", X0FinderHit.x, "X0FinderHit.x[nX0FinderHit]/D");
+  fTree->Branch("X0FinderHit.y", X0FinderHit.y, "X0FinderHit.y[nX0FinderHit]/D");
+  fTree->Branch("X0FinderHit.z", X0FinderHit.z, "X0FinderHit.z[nX0FinderHit]/D");
+  fTree->Branch("X0FinderHit.t", X0FinderHit.t, "X0FinderHit.t[nX0FinderHit]/D");
+  fTree->Branch("X0FinderHit.e", X0FinderHit.e, "X0FinderHit.e[nX0FinderHit]/D");
+
+  fTree->Branch("nTriggerCounterHit", &TriggerCounterHit.nhit, "nTriggerCounterHit/I");
+  fTree->Branch("TriggerCounterHit.ModuleID", TriggerCounterHit.cid, "TriggerCounterHit.ModuleID[nTriggerCounterHit]/I");
+  fTree->Branch("TriggerCounterHit.LayerID", TriggerCounterHit.lid, "TriggerCounterHit.LayerID[nTriggerCounterHit]/I");
+  fTree->Branch("TriggerCounterHit.SegmentID", TriggerCounterHit.segid, "TriggerCounterHit.SegmentID[nTriggerCounterHit]/I");
+  fTree->Branch("TriggerCounterHit.x", TriggerCounterHit.x, "TriggerCounterHit.x[nTriggerCounterHit]/D");
+  fTree->Branch("TriggerCounterHit.y", TriggerCounterHit.y, "TriggerCounterHit.y[nTriggerCounterHit]/D");
+  fTree->Branch("TriggerCounterHit.z", TriggerCounterHit.z, "TriggerCounterHit.z[nTriggerCounterHit]/D");
+  fTree->Branch("TriggerCounterHit.t", TriggerCounterHit.t, "TriggerCounterHit.t[nTriggerCounterHit]/D");
+  fTree->Branch("TriggerCounterHit.e", TriggerCounterHit.e, "TriggerCounterHit.e[nTriggerCounterHit]/D");
+
+  fTree->Branch("nAbsorberHit", &AbsorberHit.nhit, "nAbsorberHit/I");
+  fTree->Branch("AbsorberHit.ModuleID", AbsorberHit.cid, "AbsorberHit.ModuleID[nAbsorberHit]/I");
+  fTree->Branch("AbsorberHit.LayerID", AbsorberHit.lid, "AbsorberHit.LayerID[nAbsorberHit]/I");
+  fTree->Branch("AbsorberHit.SegmentID", AbsorberHit.segid, "AbsorberHit.SegmentID[nAbsorberHit]/I");
+  fTree->Branch("AbsorberHit.x", AbsorberHit.x, "AbsorberHit.x[nAbsorberHit]/D");
+  fTree->Branch("AbsorberHit.y", AbsorberHit.y, "AbsorberHit.y[nAbsorberHit]/D");
+  fTree->Branch("AbsorberHit.z", AbsorberHit.z, "AbsorberHit.z[nAbsorberHit]/D");
+  fTree->Branch("AbsorberHit.t", AbsorberHit.t, "AbsorberHit.t[nAbsorberHit]/D");
+  fTree->Branch("AbsorberHit.e", AbsorberHit.e, "AbsorberHit.e[nAbsorberHit]/D");
 
   fTree->Branch("nCsIHit", &CsIHit.nhit, "nCsIHit/I");
+  fTree->Branch("CsIHit.CellID", CsIHit.cid, "CsIHit.CellID[nCsIHit]/I");
   fTree->Branch("CsIHit.xid", CsIHit.xid, "CsIHit.xid[nCsIHit]/I");
   fTree->Branch("CsIHit.yid", CsIHit.yid, "CsIHit.yid[nCsIHit]/I");
   fTree->Branch("CsIHit.e", CsIHit.e, "CsIHit.e[nCsIHit]/D");
-
-  if (fSaveStepLevel) {
-    fTree->Branch("EMStepEdep", &fEMStepEdep);
-    fTree->Branch("EMPreStepx", &fEMPreStepx);
-    fTree->Branch("EMPreStepy", &fEMPreStepy);
-    fTree->Branch("EMPreStepz", &fEMPreStepz);
-    fTree->Branch("EMPreStept", &fEMPreStept);
-    fTree->Branch("EMPostStepx", &fEMPostStepx);
-    fTree->Branch("EMPostStepy", &fEMPostStepy);
-    fTree->Branch("EMPostStepz", &fEMPostStepz);
-    fTree->Branch("EMPostStept", &fEMPostStept);
-    /*
-    fTree -> Branch("EMParticlePx",&fEMParticlePx);
-    fTree -> Branch("EMParticlePy",&fEMParticlePy);
-    fTree -> Branch("EMParticlePz",&fEMParticlePz);
-    fTree -> Branch("EMParticleTrackID",&fEMParticleTrackID);
-    fTree -> Branch("EMParticleParentID",&fEMParticleParentID);
-    fTree -> Branch("EMParticleCharge",&fEMParticleCharge);
-    fTree -> Branch("EMParticleMass",&fEMParticleMass);
-    fTree -> Branch("EMParticlePID",&fEMParticlePDGID);
-    */
-    fTree->Branch("LeadStepEdep", &fLeadStepEdep);
-    fTree->Branch("LeadPreStepx", &fLeadPreStepx);
-    fTree->Branch("LeadPreStepy", &fLeadPreStepy);
-    fTree->Branch("LeadPreStepz", &fLeadPreStepz);
-    fTree->Branch("LeadPreStept", &fLeadPreStept);
-    fTree->Branch("LeadPostStepx", &fLeadPostStepx);
-    fTree->Branch("LeadPostStepy", &fLeadPostStepy);
-    fTree->Branch("LeadPostStepz", &fLeadPostStepz);
-    fTree->Branch("LeadPostStept", &fLeadPostStept);
-    /*
-    fTree -> Branch("LeadParticlePx",&fLeadParticlePx);
-    fTree -> Branch("LeadParticlePy",&fLeadParticlePy);
-    fTree -> Branch("LeadParticlePz",&fLeadParticlePz);
-    fTree -> Branch("LeadParticleTrackID",&fLeadParticleTrackID);
-    fTree -> Branch("LeadParticleParentID",&fLeadParticleParentID);
-    fTree -> Branch("LeadParticleCharge",&fLeadParticleCharge);
-    fTree -> Branch("LeadParticleMass",&fLeadParticleMass);
-    fTree -> Branch("LeadParticlePID",&fLeadParticlePDGID);
-    */
-  }
 }
 void KotoEMCalEventAction::SetRunID(G4int RunID) {
   EventInfo.runID = RunID;

@@ -24,14 +24,14 @@
 // ********************************************************************
 //
 //
-/// \file KotoEMCalEmCalorimeterSD.hh
-/// \brief Definition of the KotoEMCalEmCalorimeterSD class
+/// \file KotoEMCalTriggerCounterSD.hh
+/// \brief Definition of the KotoEMCalTriggerCounterSD class
 
-#ifndef KotoEMCalEmCalorimeterSD_h
-#define KotoEMCalEmCalorimeterSD_h 1
+#ifndef KotoEMCalTriggerCounterSD_h
+#define KotoEMCalTriggerCounterSD_h 1
 
 // This project class
-#include "KotoEMCalEmCalorimeterHit.hh"
+#include "KotoEMCalTriggerCounterHit.hh"
 
 // Geant4 class
 #include "G4VSensitiveDetector.hh"
@@ -42,10 +42,10 @@ class G4TouchableHistory;
 
 /// EM calorimeter sensitive detector
 using namespace std;
-class KotoEMCalEmCalorimeterSD : public G4VSensitiveDetector {
+class KotoEMCalTriggerCounterSD : public G4VSensitiveDetector {
  public:
-  KotoEMCalEmCalorimeterSD(G4String name, G4int layerNumber, G4int scintNumber);
-  virtual ~KotoEMCalEmCalorimeterSD();
+  KotoEMCalTriggerCounterSD(G4String name, G4int layerNumber, G4int scintNumber);
+  virtual ~KotoEMCalTriggerCounterSD();
 
   virtual void Initialize(G4HCofThisEvent* HCE);
   virtual G4bool ProcessHits(G4Step* aStep, G4TouchableHistory* ROhist);
@@ -53,37 +53,16 @@ class KotoEMCalEmCalorimeterSD : public G4VSensitiveDetector {
 
  private:
   G4String fNameSD;
-  G4int fLayerId;
-  G4int fSegmentId;
-
+  G4int fNumberOfLayers;
+  G4int fNumberOfModulesXY;
+  G4int fNumberOfTotalModules;
   vector<G4double> fEdep;
   vector<G4double> fEweightedx;
   vector<G4double> fEweightedy;
   vector<G4double> fEweightedz;
   vector<G4double> fEweightedt;
 
-  vector<vector<G4double>> fStepEdep;
-
-  vector<vector<G4double>> fPreStepx;
-  vector<vector<G4double>> fPreStepy;
-  vector<vector<G4double>> fPreStepz;
-  vector<vector<G4double>> fPreStept;
-
-  vector<vector<G4double>> fPostStepx;
-  vector<vector<G4double>> fPostStepy;
-  vector<vector<G4double>> fPostStepz;
-  vector<vector<G4double>> fPostStept;
-
-  vector<vector<G4double>> fParticlePx;
-  vector<vector<G4double>> fParticlePy;
-  vector<vector<G4double>> fParticlePz;
-  vector<vector<G4int>> fParticleTrackID;
-  vector<vector<G4int>> fParticleParentID;
-  vector<vector<G4double>> fParticleCharge;
-  vector<vector<G4double>> fParticleMass;
-  vector<vector<G4int>> fParticlePDGID;
-
-  KotoEMCalEmCalorimeterHitsCollection* fHitsCollection;
+  KotoEMCalTriggerCounterHitsCollection* fHitsCollection;
   G4int fHCID;
 };
 

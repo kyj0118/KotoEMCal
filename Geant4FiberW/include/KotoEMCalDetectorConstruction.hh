@@ -68,6 +68,16 @@ class KotoEMCalDetectorConstruction : public G4VUserDetectorConstruction {
   G4int fNumberOfModuleX;
   G4int fNumberOfModuleLayer;
 
+  //  Position defining trigger counter
+  G4int fNLayersX0Finder;
+  G4int fNFibersX0Finder;
+
+  G4int fNTriggerCounter;
+  G4double fTrigger_size_x;
+  G4double fTrigger_size_y;
+  G4double fTrigger_size_z;
+  G4double fTrigger_interval_z;
+
   // Absorber
   G4double fAbsorber_size_x;
   G4double fAbsorber_size_y;
@@ -87,6 +97,9 @@ class KotoEMCalDetectorConstruction : public G4VUserDetectorConstruction {
   G4double fModule_size_y;
   G4double fModule_size_z;
 
+  G4double fModuleIntervalXY;
+  G4double fModuleIntervalZ;
+
   G4int fNCsIx;
   G4int fNCsIy;
 
@@ -95,6 +108,8 @@ class KotoEMCalDetectorConstruction : public G4VUserDetectorConstruction {
   G4Material* fMaterial_CsI;
 
   G4LogicalVolume* fLogicScint;
+  G4LogicalVolume* fLogicTriggerCounter;
+  G4LogicalVolume* fLogicX0Finder;
   G4LogicalVolume* fLogicAbsorber;
   G4LogicalVolume* fLogicModule;
   G4LogicalVolume* fLogicCsI;
