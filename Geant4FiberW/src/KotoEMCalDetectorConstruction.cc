@@ -254,7 +254,7 @@ G4VPhysicalVolume* KotoEMCalDetectorConstruction::Construct() {
 
   // Place position finding fibers
   for (int iLayer = 0; iLayer < fNLayersX0Finder; iLayer++) {
-    G4double pos_z = fModule_size_z / 2.0 + fModuleIntervalZ * ((G4double)(iLayer - fNLayersX0Finder));
+    G4double pos_z = fScintillator_size_z / 2.0 + fScintillator_size_z* ((G4double)(iLayer - fNLayersX0Finder));
     for (int iScint = 0; iScint < fNFibersX0Finder; iScint++) {
       G4double pos_xy = (((G4double)iScint) - ((G4double)(fNFibersX0Finder - 1)) * 0.5) * fScintillator_size_y;
       G4ThreeVector pos_vector;

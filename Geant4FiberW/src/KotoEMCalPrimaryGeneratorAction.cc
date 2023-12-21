@@ -291,6 +291,7 @@ void KotoEMCalPrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
       } else if (fGenerateAngleOption == "stepTheta") {
         G4double iTheta = (G4double)gRandom->Integer(fThetaNstep);
         fTheta = fThetaMin + iTheta * fThetaStepSize;
+        fTheta*= deg;
         fDirX = sin(fTheta) * cos(fPhi);
         fDirY = sin(fTheta) * sin(fPhi);
         fDirZ = cos(fTheta);
