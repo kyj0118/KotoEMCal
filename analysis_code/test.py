@@ -26,33 +26,16 @@ def memchk(message: str = 'debug'):
 
 time_start = time.time()
 
-
-if (len(sys.argv)) is not 2:
-    print ('usage: python train.py [1. targetIndex(int)]')
-    exit()
-targetIndex = int(sys.argv[1])
-
 model_PATH = 'model'
-memlog_PATH = 'memory_log'
-timelog_PATH = 'time_log'
-
-os.system('mkdir -p {}'.format(model_PATH))
-os.system('mkdir -p {}'.format(memlog_PATH))
-os.system('mkdir -p {}'.format(timelog_PATH))
-
-model_name = '{}/model{}.json'.format(model_PATH,targetIndex)
-model_name_tmp = '{}/model{}_tmp.json'.format(model_PATH,targetIndex)
-
-flog_time='{}/time{}.txt'.format(timelog_PATH,targetIndex)
-flog_memory='{}/memory{}.txt'.format(memlog_PATH,targetIndex)
-
+model_name_x = '{}/model0.json'.format(model_PATH)
+model_name_y = '{}/model1.json'.format(model_PATH)
 
 # Define the branches you want to read
 branches = ["nScintHit", "ScintHit.e", "ScintHit.ModuleID","nCsIHit", "CsIHit.e", "CsIHit.CellID", "PrimaryParticle.px", "PrimaryParticle.py", "PrimaryParticle.pz"]
 
 # List of ROOT files
 #root_files = [f"../Geant4FiberW/root/electron1000MeV_{i:04d}.root:tree" for i in range(1, 21)]
-root_files = [f"../Geant4FiberW/root/electron1000MeV_{i:04d}.root:tree" for i in range(1, 21)]
+root_files = [f"../Geant4FiberW/root/electron1000MeV_step_{i:04d}.root:tree" for i in range(1, 21)]
 
 memchk('Before data loading')
 
@@ -61,6 +44,7 @@ data = uproot.concatenate(root_files, branches, library="np")
 
 nMaxScint=24*16
 nMaxCsI=25
+
 # Now data is a dictionary where keys are branch names and values are concatenated arrays
 nScintHit = data["nScintHit"]
 ScintHit_e = data["ScintHit.e"]
@@ -75,10 +59,9 @@ py = data["PrimaryParticle.py"]
 pz = data["PrimaryParticle.pz"]
 
 # Initialize lists to store data for COO matrix (features) and targets
-row_indices = []
-col_indices = []
 data_values = []
 targets = []
+
 total_channels = nMaxScint + nMaxCsI
 feature_matrix = np.zeros((len(nScintHit), total_channels))
 
@@ -112,44 +95,19 @@ ss = float(0.8)
 lr = float(0.02)
 gamma = float(0.0)
 
-# save model every 20 tree boosting
-nestimators_loop = int(20)
+modelx = xgboost.XGBRegressor(n_estimators=ne, learning_rate=lr, gamma=gamma, subsample=ss,colsample_bytree=1, max_depth=md)
+modely = xgboost.XGBRegressor(n_estimators=ne, learning_rate=lr, gamma=gamma, subsample=ss,colsample_bytree=1, max_depth=md)
 
-print("file read time :", time.time() - time_start )
-time_before_fit = time.time()
-rss_dataloading = memchk('After data loading')
+modelx.load_model(model_name_x)
+modely.load_model(model_name_y)
 
-xgb = xgboost.XGBRegressor(n_estimators=nestimators_loop, learning_rate=lr, gamma=gamma, subsample=ss,colsample_bytree=1, max_depth=md,verbosity=3,n_jobs=1)
 
-ntrees=0
-if (os.path.isfile(model_name) == True):
-    xgb.load_model(model_name)
-    ntrees=xgb.get_booster().num_boosted_rounds()
+predictionx = modelx.predict( feature_matrix )
+predictiony = modely.predict( feature_matrix )
 
-ntrainiter=int((ne-ntrees)/nestimators_loop)
-if ntrainiter==0 :
-    print ('ntrees : {} , n iteration : {}'.format(ntrees,ntrainiter))
-    exit()
-    
-print ('ntrees : {} , n iteration : {}'.format(ntrees,ntrainiter))
+foutname='result.txt'
+fout = open(foutname,'w')
+for i in range(0, predictionx.size):
+    fout.write('{} {} {} {}\n'.format(predictionx[i],predictiony[i], targets[i,0], targets[i,1]))
+fout.close()
 
-for _ in range(ntrainiter):
-    if ntrees == 0 :
-        xgb.fit(feature_matrix, targets[:,targetIndex])
-    else :
-        xgb.fit(feature_matrix, targets[:,targetIndex],xgb_model=model_name)
-        
-    xgb.save_model(model_name_tmp)
-    os.system('mv -f {} {}'.format(model_name_tmp,model_name))
-    
-    ntrees=xgb.get_booster().num_boosted_rounds()
-    print ('ntrees : ', ntrees)
-    rss_training = memchk('After training')
-    fout_memory = open(flog_memory,'a')
-    fout_memory.write('{0} {1:.1f}\n'.format(ntrees,rss_training))
-    fout_memory.close()
-    
-    training_time = time.time() -  time_before_fit
-    fout_time = open(flog_time,'a')
-    fout_time.write('{0} {1:.1f}\n'.format(ntrees,training_time))
-    fout_time.close()
