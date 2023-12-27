@@ -39,13 +39,43 @@ mkdir -p $outputPATH
 
 optionEnergy="-energyOpt=fixed -momentum=1000"
 optionAngle="-angleOpt=stepTheta -thetaBegin=0 -thetaStepSize=5 -thetaNstep=9"
-optionPosition="-minX=-5 -maxX=5 -minY=-5 -maxY=5 -posZ=0"
+
+#optionPosition="-minX=-5 -maxX=5 -minY=-5 -maxY=5 -posZ=0"
 optionNEvents="-nEvents=5000"
-optionParticle="-particle=e-"
 optionOthers="-useGPS=false"
-for ((seed = 1; seed <= 20; seed++)); do
-  seed_prefix0=$(printf "%04d\n" $seed)
-  optionSeed="-seed=$seed"
-  optionOutput="-outFileName=$outputPATH/electron1000MeV_step_${seed_prefix0}"
-  bsub -q s ./KotoEMCal $optionEnergy $optionAngle $optionPosition $optionParticle $optionNEvents $optionSeed $optionOutput $optionOthers
+
+optionParticle="-particle=e-"
+for energy in 200 500 1000
+do
+  optionEnergy="-energyOpt=fixed -momentum=${energy}"
+  for ((seed = 1; seed <= 20; seed++)); do
+    seed_prefix0=$(printf "%04d\n" $seed)
+    optionSeed="-seed=$seed"
+
+    optionPosition="-minX=-5 -maxX=5 -minY=-5 -maxY=5 -posZ=0"
+    optionOutput="-outFileName=$outputPATH/electron${energy}MeV_step_position5mm_${seed_prefix0}"
+    bsub -q s ./KotoEMCal $optionEnergy $optionAngle $optionPosition $optionParticle $optionNEvents $optionSeed $optionOutput $optionOthers
+
+    optionPosition="-posX=0 -posY=0 -posZ=0"
+    optionOutput="-outFileName=$outputPATH/electron${energy}MeV_step_position0_${seed_prefix0}"
+    bsub -q s ./KotoEMCal $optionEnergy $optionAngle $optionPosition $optionParticle $optionNEvents $optionSeed $optionOutput $optionOthers
+  done
+done
+
+optionParticle="-particle=e+"
+for energy in 200 500 1000
+do
+  optionEnergy="-energyOpt=fixed -momentum=${energy}"
+  for ((seed = 1; seed <= 20; seed++)); do
+    seed_prefix0=$(printf "%04d\n" $seed)
+    optionSeed="-seed=$seed"
+
+    optionPosition="-minX=-5 -maxX=5 -minY=-5 -maxY=5 -posZ=0"
+    optionOutput="-outFileName=$outputPATH/positron${energy}MeV_step_position5mm_${seed_prefix0}"
+    bsub -q s ./KotoEMCal $optionEnergy $optionAngle $optionPosition $optionParticle $optionNEvents $optionSeed $optionOutput $optionOthers
+
+    optionPosition="-posX=0 -posY=0 -posZ=0"
+    optionOutput="-outFileName=$outputPATH/positron${energy}MeV_step_position0_${seed_prefix0}"
+    bsub -q s ./KotoEMCal $optionEnergy $optionAngle $optionPosition $optionParticle $optionNEvents $optionSeed $optionOutput $optionOthers
+  done
 done

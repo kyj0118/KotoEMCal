@@ -24,19 +24,21 @@ def memchk(message: str = 'debug'):
     return rss
 
 
+particleEnergy = int(sys.argv[1])
+genPosition = str(sys.argv[2])
+particle = str(sys.argv[3])
+
 time_start = time.time()
 
 model_PATH = 'model'
-model_name_x = '{}/model0.json'.format(model_PATH)
-model_name_y = '{}/model1.json'.format(model_PATH)
-
+model_name_x = f"{model_PATH}/{particle}{particleEnergy}MeV_position{genPosition}_0.json"
+model_name_y = f"{model_PATH}/{particle}{particleEnergy}MeV_position{genPosition}_1.json"
 # Define the branches you want to read
 branches = ["nScintHit", "ScintHit.e", "ScintHit.ModuleID","nCsIHit", "CsIHit.e", "CsIHit.CellID", "PrimaryParticle.px", "PrimaryParticle.py", "PrimaryParticle.pz"]
 
 # List of ROOT files
-#root_files = [f"../Geant4FiberW/root/electron1000MeV_{i:04d}.root:tree" for i in range(1, 21)]
-root_files = [f"../Geant4FiberW/root/electron1000MeV_step_{i:04d}.root:tree" for i in range(1, 21)]
-
+fname = f"../Geant4FiberW/root/{particle}{particleEnergy}MeV_step_position{genPosition}"
+root_files = [f"{fname}_{i:04d}.root:tree" for i in range(1, 21)]
 memchk('Before data loading')
 
 # Use uproot to concatenate the data from all files
@@ -105,7 +107,10 @@ modely.load_model(model_name_y)
 predictionx = modelx.predict( feature_matrix )
 predictiony = modely.predict( feature_matrix )
 
-foutname='result.txt'
+outputPATH='result'
+os.system(f'mkdir -p {outputPATH}')
+foutname = f"{outputPATH}/{particle}{particleEnergy}MeV_position{genPosition}.txt"
+
 fout = open(foutname,'w')
 for i in range(0, predictionx.size):
     fout.write('{} {} {} {}\n'.format(predictionx[i],predictiony[i], targets[i,0], targets[i,1]))

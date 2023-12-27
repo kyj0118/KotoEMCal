@@ -27,10 +27,13 @@ def memchk(message: str = 'debug'):
 time_start = time.time()
 
 
-if (len(sys.argv)) is not 2:
-    print ('usage: python train.py [1. targetIndex(int)]')
+if (len(sys.argv)) is not 5:
+    print ('usage: python train.py [1. targetIndex(int)] [2. energy] [3. xy position] [4. particle]')
     exit()
 targetIndex = int(sys.argv[1])
+particleEnergy = int(sys.argv[2])
+genPosition = str(sys.argv[3])
+particle = str(sys.argv[4])
 
 model_PATH = 'model'
 memlog_PATH = 'memory_log'
@@ -40,11 +43,11 @@ os.system('mkdir -p {}'.format(model_PATH))
 os.system('mkdir -p {}'.format(memlog_PATH))
 os.system('mkdir -p {}'.format(timelog_PATH))
 
-model_name = '{}/model{}.json'.format(model_PATH,targetIndex)
-model_name_tmp = '{}/model{}_tmp.json'.format(model_PATH,targetIndex)
+model_name = f"{model_PATH}/{particle}{particleEnergy}MeV_position{genPosition}_{targetIndex}.json"
+model_name_tmp = f"{model_PATH}/{particle}{particleEnergy}MeV_position{genPosition}_{targetIndex}_tmp.json"
 
-flog_time='{}/time{}.txt'.format(timelog_PATH,targetIndex)
-flog_memory='{}/memory{}.txt'.format(memlog_PATH,targetIndex)
+flog_time=f'{timelog_PATH}/time_{particle}{particleEnergy}MeV_position{genPosition}_{targetIndex}.txt'
+flog_memory=f'{memlog_PATH}/memory_{particle}{particleEnergy}MeV_position{genPosition}_{targetIndex}.txt'
 
 
 # Define the branches you want to read
@@ -52,7 +55,8 @@ branches = ["nScintHit", "ScintHit.e", "ScintHit.ModuleID","nCsIHit", "CsIHit.e"
 
 # List of ROOT files
 #root_files = [f"../Geant4FiberW/root/electron1000MeV_{i:04d}.root:tree" for i in range(1, 21)]
-root_files = [f"../Geant4FiberW/root/electron1000MeV_{i:04d}.root:tree" for i in range(1, 21)]
+fname = f"../Geant4FiberW/root/{particle}{particleEnergy}MeV_position{genPosition}"
+root_files = [f"{fname}_{i:04d}.root:tree" for i in range(1, 21)]
 
 memchk('Before data loading')
 
