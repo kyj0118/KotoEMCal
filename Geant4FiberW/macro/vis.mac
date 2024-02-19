@@ -31,9 +31,9 @@
 /vis/viewer/set/viewpointThetaPhi 100 160
 /vis/viewer/set/autoRefresh true
 
-/gps/position  0 0 0
+/gps/position  0 0 -2 m
 /gps/direction 0 0 1
-/gps/particle  mu-
+/gps/particle  e-
 /gps/energy    1000 MeV
 /run/beamOn    5
 

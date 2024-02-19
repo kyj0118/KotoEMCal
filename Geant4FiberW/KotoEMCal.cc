@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
     options["mac"] = "vis.mac";
     options["seed"] = "1";
     options["notSaveTree"] = "true";
+    options["detRotationAngle"] = "30";
   }
 
   for (auto [key, value] : options) {
@@ -123,7 +124,7 @@ int main(int argc, char** argv) {
 
   //  if (options["visualizationOnly"] != "true") {
   tf->cd();
-  tr->Write();
+  tr->Write(TObject::kOverwrite);
   tf->Close();
   //  }
   // delete visManager;
