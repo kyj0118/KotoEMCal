@@ -122,13 +122,9 @@ int main(int argc, char** argv) {
     UImanager->ApplyCommand(command);
   }
 
-  //  if (options["visualizationOnly"] != "true") {
   tf->cd();
-  tr->Write(TObject::kOverwrite);
+  tr->Write("",TObject::kOverwrite);
   tf->Close();
-  //  }
-  // delete visManager;
-
   return 0;
 }
 
