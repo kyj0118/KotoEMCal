@@ -159,6 +159,7 @@ void KotoEMCalPrimaryGeneratorAction::SetOptionConfiguration(map<string, string>
         cout << "angleOpt=uniformSolid: The options thetaMin and thetaMax are necessary" << endl;
         invalid_flag = true;
       }
+
     } else if (config["angleOpt"] == "uniformTheta") {
       if (config.find("thetaMin") != config.end() && config.find("thetaMax") != config.end()) {
         fThetaMin = atof(config["thetaMin"].data()) * deg;
@@ -193,7 +194,7 @@ void KotoEMCalPrimaryGeneratorAction::SetOptionConfiguration(map<string, string>
       fPosRandomX = false;
     } else if (config.find("minX") != config.end() && config.find("maxX") != config.end()) {
       fMinX = atof(config["minX"].data()) * mm;
-      fMaxY = atof(config["maxX"].data()) * mm;
+      fMaxX = atof(config["maxX"].data()) * mm;
       fPosRandomX = true;
     } else {
       cout << "Primary generation positon X should be defined. Use posX (or minX and maxX) in unit of mm" << endl;
@@ -221,7 +222,6 @@ void KotoEMCalPrimaryGeneratorAction::SetOptionConfiguration(map<string, string>
       cout << "Primary generation positon Z should be defined. Use posZ (or minZ and maxZ) in unit of mm" << endl;
       invalid_flag = true;
     }
-
   } else {
     cout << "Option useGPS is necessary [useGPS=true or false]" << endl;
     invalid_flag = true;
@@ -288,16 +288,25 @@ void KotoEMCalPrimaryGeneratorAction::GeneratePrimaries(G4Event* event) {
         fDirX = sin(fTheta) * cos(fPhi);
         fDirY = sin(fTheta) * sin(fPhi);
         fDirZ = cos(fTheta);
+      } else if (fGenerateAngleOption == "rotateAngle") {
+        fTheta = gRandom->Uniform(fThetaMin, fThetaMax);
+        fDirX = sin(fTheta) * cos(fPhi);
+        fDirY = sin(fTheta) * sin(fPhi);
+        fDirZ = cos(fTheta);
       } else if (fGenerateAngleOption == "stepTheta") {
         G4double iTheta = (G4double)gRandom->Integer(fThetaNstep);
         fTheta = fThetaMin + iTheta * fThetaStepSize;
-        fTheta*= deg;
+        fTheta *= deg;
         fDirX = sin(fTheta) * cos(fPhi);
         fDirY = sin(fTheta) * sin(fPhi);
         fDirZ = cos(fTheta);
       }
     }
-    fParticleGun->SetParticleMomentumDirection(G4ThreeVector(fDirX, fDirY, fDirZ));
+    double rotation_theta = atof(fOptionConfiguration["beamRotationAngle"].c_str()) * deg;
+    G4ThreeVector beamDirection(fDirX, fDirY, fDirZ);
+    beamDirection.rotateY(rotation_theta);
+
+    fParticleGun->SetParticleMomentumDirection(beamDirection);
 
     gPrimaryParticlePosition = fParticleGun->GetParticlePosition();
     gPrimaryParticleEnergy = fParticleGun->GetParticleEnergy();
